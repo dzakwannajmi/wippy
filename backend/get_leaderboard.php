@@ -4,7 +4,6 @@ header("Content-Type: application/json");
 
 include "db.php";
 
-// AMBIL DARI TABEL 'leaderboard'
 $sql = "SELECT player_name, score, accuracy, avg_time 
         FROM leaderboard 
         ORDER BY score DESC, accuracy DESC 

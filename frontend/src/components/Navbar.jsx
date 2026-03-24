@@ -1,15 +1,30 @@
 import { useLocation } from 'react-router-dom';
+import { HashLink } from 'react-router-hash-link';
 import PillNav from './ui/PillNav';
 import { GrCodeSandbox } from "react-icons/gr";
 
 export default function Navbar() {
     const location = useLocation();
+
     const navItems = [
-        { label: 'ARENA', href: '/entry' },      
-        { label: 'FEATURES', href: '/#features' },   
-        { label: 'TECH', href: '/#showcase' },       
-        { label: 'ROADMAP', href: '/#roadmap' },     
+        { label: 'ARENA', href: '/entry' },
+        { label: 'FEATURES', href: '/#features' },
+        { label: 'TECH', href: '/#showcase' },
+        { label: 'ROADMAP', href: '/#roadmap' },
     ];
+
+    const formattedItems = navItems.map(item => ({
+        ...item,
+        label: (
+            <HashLink
+                smooth
+                to={item.href}
+                className="w-full h-full flex items-center justify-center no-underline text-inherit"
+            >
+                {item.label}
+            </HashLink>
+        )
+    }));
 
     return (
         <PillNav
@@ -20,13 +35,11 @@ export default function Navbar() {
                 />
             }
             logoAlt="Wippy Arena"
-            items={navItems}
-            activeHref={location.pathname === '/arena' ? '/arena' : location.pathname + location.hash}
-
+            items={formattedItems}
+            activeHref={location.pathname + location.hash}
             baseColor="#FAFAFA"
             pillColor="#50C878"
             hoveredPillTextColor="#0B6E4F"
-
             initialLoadAnimation={true}
             ease="expo.out"
         />
