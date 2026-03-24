@@ -1,0 +1,105 @@
+@import "tailwindcss";
+
+/* 1. Pastikan link Google Fonts berada di paling atas */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
+
+@theme {
+  /* Di Tailwind 4, ini akan membuat utility class 'font-poppins' */
+  --font-poppins: "Poppins", sans-serif;
+
+  --color-primary: #50C878;
+  --color-secondary: #0B6E4F;
+  --color-font-main: #FAFAFA;
+  --color-dark-abyss: #030014;
+
+  /* Ubah variabel shadow agar Tailwind 4 mengenalinya sebagai utility shadow-emerald */
+  --shadow-emerald: 0 0 20px rgba(80, 200, 120, 0.3);
+  --shadow-emerald-strong: 0 0 40px rgba(80, 200, 120, 0.5);
+}
+
+/* 2. Gunakan selector yang lebih spesifik untuk memaksa font muncul */
+:root {
+  --font-poppins: "Poppins", sans-serif;
+  /* Deklarasi ulang di root untuk CSS standar */
+}
+
+html,
+body {
+  font-family: "Poppins", sans-serif !important;
+  color: var(--color-font-main);
+  background-color: var(--color-dark-abyss);
+  margin: 0;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.bg-blueprint {
+  background-image: radial-gradient(rgba(80, 200, 120, 0.2) 1px, transparent 1px);
+  background-size: 30px 30px;
+  mask-image: linear-gradient(to bottom, black, transparent, black);
+}
+
+.bg-arena-grid {
+  background-image:
+    linear-gradient(rgba(80, 200, 120, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(80, 200, 120, 0.05) 1px, transparent 1px);
+  background-size: 60px 60px;
+}
+
+/* --- ROADMAP UTILITIES --- */
+
+/* Glassmorphism Card */
+.glass-card-roadmap {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(20px);
+  border: 1px border rgba(255, 255, 255, 0.1);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.glass-card-roadmap:hover {
+  background: rgba(80, 200, 120, 0.08);
+  /* primary color with low opacity */
+  border-color: rgba(80, 200, 120, 0.3);
+  transform: translateY(-2px);
+}
+
+/* Status Badges */
+.badge-active {
+  color: var(--color-primary);
+  border: 1px solid var(--color-primary);
+  background: rgba(80, 200, 120, 0.05);
+  box-shadow: 0 0 15px rgba(80, 200, 120, 0.2);
+}
+
+.badge-locked {
+  color: #64748b;
+  /* slate-500 */
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.progress-bar-glow {
+  box-shadow: 0 0 10px rgba(80, 200, 120, 0.5);
+  background: linear-gradient(90deg, var(--color-primary), #a7f3d0);
+  animation: bar-scan 2s infinite linear;
+}
+
+@keyframes bar-scan {
+  0% {
+    background-position: -200% 0;
+  }
+
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.quest-card-hover {
+  transition: all 0.3s ease;
+}
+
+.quest-card-hover:hover {
+  border-color: var(--color-primary);
+  box-shadow: inset 0 0 20px rgba(80, 200, 120, 0.1), 0 0 30px rgba(0, 0, 0, 0.5);
+}
