@@ -4,7 +4,6 @@ header("Content-Type: application/json");
 
 include "db.php";
 
-// Mengambil 10 skor tertinggi, diurutkan berdasarkan skor dan akurasi
 $query = "SELECT player_name, score, accuracy, avg_time 
           FROM wippy_leaderboard 
           ORDER BY score DESC, accuracy DESC 

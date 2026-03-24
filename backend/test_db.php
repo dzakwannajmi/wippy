@@ -1,5 +1,4 @@
 <?php
-// backend/test_db.php
 require 'db.php'; 
 
 try {
@@ -7,7 +6,6 @@ try {
         throw new Exception("Koneksi tidak ditemukan. Cek variabel di db.php");
     }
 
-    // Menjalankan perintah tes simpel
     $result = mysqli_query($conn, "SELECT VERSION() as version");
     $row = mysqli_fetch_assoc($result);
     

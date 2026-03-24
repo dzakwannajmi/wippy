@@ -21,23 +21,20 @@ if ($data) {
     $avg_time = (float)($data["avgTime"] ?? 0);
     $room_id  = $data["roomId"] ?? "Global";
 
-    // 1. LOGIKA CEK DUPLIKAT (Si Satpam)
     $checkStmt = $conn->prepare("SELECT id FROM leaderboard WHERE player_name = ? AND room_id = ?");
     $checkStmt->bind_param("ss", $name, $room_id);
     $checkStmt->execute();
     $checkStmt->store_result();
     
-    // Jika sudah ada data, jangan INSERT lagi
+
     if ($checkStmt->num_rows > 0) {
         echo json_encode(["status" => "success", "message" => "Legend already recorded!"]);
         $checkStmt->close();
         $conn->close();
-        exit(); // STOP DISINI
+        exit(); 
     }
     $checkStmt->close();
 
-    // 2. LOGIKA INSERT (Hanya jalan kalau belum ada data)
-    // Kamu tadi lupa baris prepare INSERT ini:
     $stmt = $conn->prepare("INSERT INTO leaderboard (player_name, score, accuracy, avg_time, room_id) VALUES (?, ?, ?, ?, ?)");
     $stmt->bind_param("sidds", $name, $score, $accuracy, $avg_time, $room_id);
 

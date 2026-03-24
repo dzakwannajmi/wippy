@@ -10,17 +10,14 @@ function loadEnv($path) {
     }
 }
 
-// Panggil fungsi untuk memuat file .env
 loadEnv(__DIR__ . '/.env');
 
-// Ambil data dari $_ENV
 $host = $_ENV['DB_HOST'];
 $port = $_ENV['DB_PORT'];
 $user = $_ENV['DB_USER'];
 $pass = $_ENV['DB_PASSWORD'];
 $db   = $_ENV['DB_NAME'];
 
-// Koneksi menggunakan MySQLi
 $conn = mysqli_connect($host, $user, $pass, $db, $port);
 
 if (!$conn) {
