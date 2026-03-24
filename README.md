@@ -1,5 +1,7 @@
 # 🟢 Wippy Arena: Emerald Edition
 
+<img width="1920" height="1080" alt="Screenshot 2026-03-24 212130" src="https://github.com/user-attachments/assets/dcde2613-dc4d-49e0-b690-50a757d14297" />
+
 **A High-Fidelity Real-Time Competitive Programming Quiz Platform**
 
 Wippy Arena is a modern, gamified web application designed for developers to challenge their skills in **PHP, JavaScript, and React**. Featuring a futuristic *Cyber-Emerald* aesthetic, it delivers real-time synchronization, fluid animations, and a global leaderboard.
