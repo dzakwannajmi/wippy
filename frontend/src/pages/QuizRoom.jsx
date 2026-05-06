@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { io } from "socket.io-client";
 import { motion, AnimatePresence } from "framer-motion";
@@ -7,7 +7,6 @@ import PixelBlast from "../components/PixelBlast";
 
 import { SiPhp, SiJavascript, SiReact } from 'react-icons/si';
 
-// --- HUD ICONS ---
 import {
     IoFingerPrintOutline,
     IoAnalyticsOutline,
@@ -20,11 +19,16 @@ import {
 
 import { QUESTION_BANK } from "../../question";
 
-const socket = io(import.meta.env.VITE_SOCKET_URL || "http://localhost:3001");
-
 export default function QuizRoom() {
     const navigate = useNavigate();
     const location = useLocation();
+
+    // ✅ Socket dipindah ke dalam component + useMemo agar env terbaca
+    const socket = useMemo(() => {
+        const url = import.meta.env.VITE_SOCKET_URL || "http://localhost:3001";
+        console.log("🔌 Connecting to:", url);
+        return io(url);
+    }, []);
 
     const { playerName, isHost, roomId, roomPass } = location.state || {
         playerName: "Guest_Operator",
@@ -42,6 +46,13 @@ export default function QuizRoom() {
     const [totalTime, setTotalTime] = useState(0);
     const [selectedCategory, setSelectedCategory] = useState(null);
     const [questions, setQuestions] = useState([]);
+
+    // ✅ Cleanup socket saat component unmount
+    useEffect(() => {
+        return () => {
+            socket.disconnect();
+        };
+    }, [socket]);
 
     useEffect(() => {
         if (isHost) {
@@ -71,7 +82,7 @@ export default function QuizRoom() {
             socket.off("receive_start_game");
             socket.off("room_terminated");
         };
-    }, [roomId, playerName, isHost, roomPass, navigate]);
+    }, [roomId, playerName, isHost, roomPass, navigate, socket]);
 
     useEffect(() => {
         if (isWaiting || questions.length === 0) return;
@@ -112,7 +123,6 @@ export default function QuizRoom() {
         handleNext();
     };
 
-    // --- RENDER ICON BERDASARKAN KATEGORI ---
     const getTechIcon = (tech, active) => {
         const size = 32;
         switch (tech) {
