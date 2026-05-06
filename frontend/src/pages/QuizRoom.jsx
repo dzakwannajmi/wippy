@@ -5,7 +5,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import WaitingArena from "../components/WaitingArena";
 import PixelBlast from "../components/PixelBlast";
 
-import { SiPhp, SiJavascript, SiReact, SiCss3 } from 'react-icons/si';
+import { SiPhp, SiJavascript, SiReact } from 'react-icons/si';
+import { IoColorPaletteOutline } from 'react-icons/io5';
 import {
     IoFingerPrintOutline,
     IoAnalyticsOutline,
@@ -199,7 +200,7 @@ export default function QuizRoom() {
         switch (tech) {
             case 'PHP': return <SiPhp size={size} className="text-[#777BB4]" />;
             case 'JAVASCRIPT': return <SiJavascript size={size} className="text-[#F7DF1E]" />;
-            case 'CSS': return <SiCss3 size={size} className="text-[#264DE4]" />;
+            case 'CSS': return <IoColorPaletteOutline size={size} className="text-[#264DE4]" />;
             case 'REACT': return <SiReact size={size} className="text-[#61DAFB]" />;
             default: return null;
         }
