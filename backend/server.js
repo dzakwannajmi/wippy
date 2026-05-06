@@ -13,6 +13,8 @@ const PORT = process.env.APP_PORT || 8080;
 
 const ALLOWED_ORIGINS = [
     "http://localhost:5173",
+    "https://wippy-rosy.vercel.app",
+    "https://wippy-git-main-dzakwannajmis-projects.vercel.app",
     process.env.FRONTEND_URL,
 ].filter(Boolean);
 
