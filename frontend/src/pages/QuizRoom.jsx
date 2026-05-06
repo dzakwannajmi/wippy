@@ -15,11 +15,9 @@ import {
     IoRadioOutline,
     IoCheckmarkCircleOutline,
     IoCloseCircleOutline,
-    IoColorPaletteOutline,
 } from "react-icons/io5";
 
-// Kategori yang tersedia (tidak perlu import QUESTION_BANK lagi)
-const CATEGORIES = ["PHP", "JAVASCRIPT", "CSS", "REACT"];
+const CATEGORIES = ["PHP", "JAVASCRIPT", "REACT"];
 
 export default function QuizRoom() {
     const navigate = useNavigate();
@@ -38,36 +36,24 @@ export default function QuizRoom() {
         roomPass: "0"
     };
 
-    // --- GAME STATE ---
-    const [gamePhase, setGamePhase] = useState("waiting"); // waiting | countdown | playing | answer_reveal | game_over
+    const [gamePhase, setGamePhase] = useState("waiting");
     const [players, setPlayers] = useState([]);
     const [selectedCategory, setSelectedCategory] = useState(null);
-
-    // Soal dari server
     const [currentQuestion, setCurrentQuestion] = useState(null);
     const [questionIndex, setQuestionIndex] = useState(0);
     const [totalQuestions, setTotalQuestions] = useState(0);
-
-    // Timer dari server
     const [timeLeft, setTimeLeft] = useState(10);
     const [countdown, setCountdown] = useState(null);
-
-    // Jawaban & feedback
     const [selectedAnswer, setSelectedAnswer] = useState(null);
-    const [answerResult, setAnswerResult] = useState(null); // { isCorrect, correctAnswer, gainedScore, totalScore }
+    const [answerResult, setAnswerResult] = useState(null);
     const [hasAnswered, setHasAnswered] = useState(false);
-
-    // Score lokal untuk display
     const [myScore, setMyScore] = useState(0);
 
-    // Cleanup socket saat unmount
     useEffect(() => {
         return () => socket.disconnect();
     }, [socket]);
 
-    // --- SOCKET EVENTS ---
     useEffect(() => {
-        // Join/Create room
         if (isHost) {
             socket.emit("create_room", { roomId, roomPass, hostName: playerName });
         } else {
@@ -79,23 +65,19 @@ export default function QuizRoom() {
             });
         }
 
-        // Update daftar player
         socket.on("update_players", (playersList) => {
             setPlayers(playersList);
         });
 
-        // Game dimulai
         socket.on("receive_start_game", (category) => {
             setSelectedCategory(category);
         });
 
-        // Countdown 3,2,1
         socket.on("countdown", (count) => {
             setGamePhase("countdown");
             setCountdown(count);
         });
 
-        // Soal baru dari server
         socket.on("next_question", (data) => {
             setCurrentQuestion(data);
             setQuestionIndex(data.index);
@@ -106,41 +88,34 @@ export default function QuizRoom() {
             setGamePhase("playing");
         });
 
-        // Timer tick dari server
         socket.on("timer_tick", (time) => {
             setTimeLeft(time);
         });
 
-        // Hasil jawaban dari server
         socket.on("answer_result", (result) => {
             setAnswerResult(result);
             setMyScore(result.totalScore);
             setGamePhase("answer_reveal");
-
-            // Kembali ke playing setelah 1.5 detik (menunggu soal berikutnya)
             setTimeout(() => {
                 setGamePhase("playing");
             }, 1500);
         });
 
-        // Game selesai
         socket.on("game_over", (data) => {
             setGamePhase("game_over");
-
             setTimeout(() => {
                 navigate("/podium", {
                     state: {
-                        players: data.players,
+                        players:    data.players,
                         mySocketId: socket.id,
                         playerName,
                         roomId,
-                        category: data.category,
+                        category:   data.category,
                     }
                 });
             }, 1500);
         });
 
-        // Room diterminasi
         socket.on("room_terminated", (msg) => {
             alert(msg);
             navigate("/");
@@ -158,13 +133,10 @@ export default function QuizRoom() {
         };
     }, [roomId, playerName, isHost, roomPass, navigate, socket, totalQuestions]);
 
-    // --- HANDLE ANSWER ---
     const handleAnswer = useCallback((index) => {
         if (hasAnswered || gamePhase !== "playing") return;
-
         setHasAnswered(true);
         setSelectedAnswer(index);
-
         const timeUsed = 10 - timeLeft;
         socket.emit("submit_answer", {
             roomId,
@@ -173,9 +145,7 @@ export default function QuizRoom() {
         });
     }, [hasAnswered, gamePhase, timeLeft, socket, roomId]);
 
-    // --- HELPER: warna button jawaban ---
     const getButtonStyle = (index) => {
-        // Saat answer_reveal — tampilkan benar/salah
         if (gamePhase === "answer_reveal" && answerResult) {
             if (index === answerResult.correctAnswer) {
                 return "border-green-500/80 bg-green-500/20 text-white shadow-[0_0_20px_rgba(34,197,94,0.3)]";
@@ -185,24 +155,18 @@ export default function QuizRoom() {
             }
             return "border-white/5 bg-white/[0.02] opacity-40";
         }
-
-        // Saat playing — highlight yang dipilih
         if (index === selectedAnswer) {
             return "border-primary/80 bg-primary/20 text-white";
         }
-
-        // Default
         return "border-white/5 bg-white/[0.03] hover:border-primary/40 hover:bg-primary/5";
     };
 
-    // --- TECH ICON ---
     const getTechIcon = (tech, size = 32) => {
         switch (tech) {
-            case 'PHP': return <SiPhp size={size} className="text-[#777BB4]" />;
+            case 'PHP':        return <SiPhp size={size} className="text-[#777BB4]" />;
             case 'JAVASCRIPT': return <SiJavascript size={size} className="text-[#F7DF1E]" />;
-            case 'CSS': return <IoColorPaletteOutline size={size} className="text-[#264DE4]" />;
-            case 'REACT': return <SiReact size={size} className="text-[#61DAFB]" />;
-            default: return null;
+            case 'REACT':      return <SiReact size={size} className="text-[#61DAFB]" />;
+            default:           return null;
         }
     };
 
@@ -300,7 +264,6 @@ export default function QuizRoom() {
 
                 {/* SIDEBAR */}
                 <aside className="w-full lg:w-80 flex flex-col gap-8">
-                    {/* Player Info */}
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
@@ -326,7 +289,6 @@ export default function QuizRoom() {
                         </div>
                     </motion.div>
 
-                    {/* Live Leaderboard */}
                     <div className="glass-card-roadmap p-8 rounded-[2.5rem] border border-white/5 flex-1 shadow-2xl overflow-hidden">
                         <h4 className="text-[9px] font-normal text-slate-400 uppercase tracking-[0.4em] mb-6 flex items-center gap-2">
                             <IoAnalyticsOutline size={16} className="text-primary/60" /> Live_Telemetry
@@ -364,7 +326,7 @@ export default function QuizRoom() {
                                     <p className="text-[10px] text-primary/40 tracking-[0.6em] uppercase mb-6">
                                         Core_Selector
                                     </p>
-                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                    <div className="grid grid-cols-3 gap-4">
                                         {CATEGORIES.map((tech) => (
                                             <motion.div
                                                 key={tech}
@@ -406,7 +368,6 @@ export default function QuizRoom() {
                     {(gamePhase === "playing" || gamePhase === "answer_reveal") && currentQuestion && (
                         <div className="flex-1 flex flex-col gap-8">
 
-                            {/* Timer + Progress */}
                             <div className="flex justify-between items-end px-6">
                                 <div className="flex items-center gap-4">
                                     <div className={`p-4 rounded-2xl border transition-all ${timeLeft <= 3
@@ -436,10 +397,8 @@ export default function QuizRoom() {
                                 </div>
                             </div>
 
-                            {/* Question Card */}
                             <div className="glass-card-roadmap flex-1 rounded-[3.5rem] p-12 md:p-16 border border-white/10 relative overflow-hidden flex flex-col shadow-[0_0_60px_rgba(0,0,0,0.5)]">
 
-                                {/* Timer bar */}
                                 <div className="absolute top-0 left-0 w-full h-[2px] bg-white/5">
                                     <motion.div
                                         className={`h-full ${timeLeft <= 3 ? 'bg-red-500 shadow-[0_0_10px_#ef4444]' : 'bg-primary shadow-[0_0_10px_#50C878]'}`}
@@ -448,7 +407,6 @@ export default function QuizRoom() {
                                     />
                                 </div>
 
-                                {/* Answer Result Feedback */}
                                 <AnimatePresence>
                                     {gamePhase === "answer_reveal" && answerResult && (
                                         <motion.div
@@ -474,12 +432,10 @@ export default function QuizRoom() {
                                     )}
                                 </AnimatePresence>
 
-                                {/* Background icon kategori */}
                                 <div className="absolute inset-0 flex items-center justify-center opacity-[0.03] pointer-events-none">
                                     {getTechIcon(selectedCategory, 200)}
                                 </div>
 
-                                {/* Pertanyaan */}
                                 <div className="flex-1 flex flex-col items-center justify-center relative">
                                     <motion.h1
                                         key={questionIndex}
@@ -491,7 +447,6 @@ export default function QuizRoom() {
                                     </motion.h1>
                                 </div>
 
-                                {/* Pilihan Jawaban */}
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mt-12">
                                     {currentQuestion.options.map((opt, i) => (
                                         <motion.button
@@ -516,8 +471,6 @@ export default function QuizRoom() {
                                             <span className="font-normal text-[15px] tracking-wide text-slate-400 group-hover:text-white transition-colors">
                                                 {opt}
                                             </span>
-
-                                            {/* Icon benar/salah */}
                                             {gamePhase === "answer_reveal" && i === answerResult?.correctAnswer && (
                                                 <IoCheckmarkCircleOutline size={20} className="text-green-400 ml-auto flex-shrink-0" />
                                             )}
@@ -528,7 +481,6 @@ export default function QuizRoom() {
                                     ))}
                                 </div>
 
-                                {/* Sudah jawab tapi menunggu soal berikutnya */}
                                 {hasAnswered && gamePhase === "playing" && (
                                     <motion.p
                                         initial={{ opacity: 0 }}
