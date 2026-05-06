@@ -34,15 +34,15 @@ async function connectDB() {
     try {
         console.log("🔌 Connecting to DB...");
         pool = mysql.createPool({
-            host: process.env.MYSQLHOST || "shortline.proxy.rlwy.net",
-            port: parseInt(process.env.MYSQLPORT) || 27837,
-            user: process.env.MYSQLUSER || "root",
-            password: process.env.MYSQLPASSWORD || "UpecDTEIvcUcUGJzYPXlhdwjAQNJBNcQ",
-            database: process.env.MYSQLDATABASE || "railway",
+            host:               process.env.MYSQLHOST || "shortline.proxy.rlwy.net",
+            port:               parseInt(process.env.MYSQLPORT) || 27837,
+            user:               process.env.MYSQLUSER || "root",
+            password:           process.env.MYSQLPASSWORD || "UpecDTEIvcUcUGJzYPXlhdwjAQNJBNcQ",
+            database:           process.env.MYSQLDATABASE || "railway",
             waitForConnections: true,
-            connectionLimit: 10,
-            connectTimeout: 60000,
-            ssl: { rejectUnauthorized: false }
+            connectionLimit:    10,
+            connectTimeout:     60000,
+            ssl:                { rejectUnauthorized: false }
         });
 
         const conn = await pool.getConnection();
@@ -94,10 +94,10 @@ app.post('/api/save-score', async (req, res) => {
     try {
         const {
             playerName = "Anonymous",
-            score = 0,
-            accuracy = 0,
-            avgTime = 0,
-            roomId = "Global"
+            score      = 0,
+            accuracy   = 0,
+            avgTime    = 0,
+            roomId     = "Global"
         } = req.body;
 
         const [existing] = await pool.execute(
@@ -122,7 +122,7 @@ app.post('/api/save-score', async (req, res) => {
 });
 
 // =============================================
-// QUESTION BANK (dipindah ke server)
+// QUESTION BANK
 // =============================================
 const QUESTION_BANK = {
     PHP: [
@@ -169,28 +169,6 @@ const QUESTION_BANK = {
         { question: "Spread operator di JavaScript menggunakan simbol?", options: ["..", "...", "**", "->"], answer: 1 },
         { question: "Method untuk mengecek apakah semua elemen array memenuhi kondisi?", options: ["some()", "every()", "find()", "includes()"], answer: 1 },
     ],
-    CSS: [
-        { question: "Properti untuk mengubah warna latar belakang?", options: ["color", "bg-color", "background-color", "fill"], answer: 2 },
-        { question: "Properti CSS untuk mengubah ukuran font?", options: ["text-size", "font-size", "font-weight", "text-scale"], answer: 1 },
-        { question: "Value display untuk membuat flexbox?", options: ["block", "inline", "flex", "grid"], answer: 2 },
-        { question: "Properti untuk memberi jarak di dalam elemen?", options: ["margin", "padding", "spacing", "gap"], answer: 1 },
-        { question: "Properti untuk memberi jarak di luar elemen?", options: ["padding", "margin", "border", "outline"], answer: 1 },
-        { question: "Selector CSS untuk memilih elemen dengan id 'header'?", options: [".header", "#header", "*header", "@header"], answer: 1 },
-        { question: "Selector CSS untuk memilih elemen dengan class 'btn'?", options: ["#btn", ".btn", "*btn", "btn"], answer: 1 },
-        { question: "Properti untuk mengatur posisi elemen secara absolut?", options: ["display: absolute", "position: absolute", "float: absolute", "align: absolute"], answer: 1 },
-        { question: "Cara membuat teks menjadi tebal di CSS?", options: ["font-style: bold", "text-weight: bold", "font-weight: bold", "text-style: bold"], answer: 2 },
-        { question: "Properti untuk mengatur transparansi elemen?", options: ["transparency", "visibility", "opacity", "alpha"], answer: 2 },
-        { question: "Unit CSS yang relatif terhadap ukuran viewport width?", options: ["px", "em", "rem", "vw"], answer: 3 },
-        { question: "Properti flexbox untuk mengatur alignment di sumbu utama?", options: ["align-items", "justify-content", "flex-direction", "flex-wrap"], answer: 1 },
-        { question: "Cara membuat border radius melingkar sempurna?", options: ["border-radius: 0", "border-radius: 100px", "border-radius: 50%", "border-radius: round"], answer: 2 },
-        { question: "Properti untuk mengatur urutan stack elemen?", options: ["stack-order", "z-index", "layer", "depth"], answer: 1 },
-        { question: "Pseudo-class untuk style saat hover?", options: [":hover", "::hover", ".hover", "#hover"], answer: 0 },
-        { question: "Properti untuk menyembunyikan elemen tapi tetap occupying space?", options: ["display: none", "visibility: hidden", "opacity: 0", "hidden: true"], answer: 1 },
-        { question: "CSS Grid property untuk mendefinisikan kolom?", options: ["grid-columns", "grid-template-columns", "column-template", "grid-cols"], answer: 1 },
-        { question: "Cara membuat animasi CSS?", options: ["@transition", "@animation", "@keyframes", "@motion"], answer: 2 },
-        { question: "Properti untuk mengatur jarak antar elemen dalam flexbox/grid?", options: ["spacing", "margin", "gap", "padding"], answer: 2 },
-        { question: "Media query untuk layar dengan lebar maksimal 768px?", options: ["@media (min-width: 768px)", "@media (max-width: 768px)", "@media screen 768px", "@media (width: 768px)"], answer: 1 },
-    ],
     REACT: [
         { question: "Hook untuk menyimpan state di functional component?", options: ["useEffect", "useRef", "useState", "useContext"], answer: 2 },
         { question: "Hook untuk side effects di React?", options: ["useState", "useEffect", "useCallback", "useMemo"], answer: 1 },
@@ -215,28 +193,27 @@ const QUESTION_BANK = {
     ],
 };
 
-// Helper: shuffle array
+// =============================================
+// HELPER
+// =============================================
 function shuffleArray(arr) {
     return [...arr].sort(() => Math.random() - 0.5);
 }
 
 // =============================================
-// SOCKET.IO — GAME LOGIC
+// GAME LOGIC
 // =============================================
 const activeRooms = {};
-const QUESTION_TIME = 10; // detik per soal
+const QUESTION_TIME = 10;
 
 function startGameTimer(roomId) {
     const room = activeRooms[roomId];
     if (!room) return;
 
-    // Bersihkan timer sebelumnya
     if (room.timerInterval) clearInterval(room.timerInterval);
-    if (room.questionTimeout) clearTimeout(room.questionTimeout);
 
     room.timeLeft = QUESTION_TIME;
 
-    // Kirim tick setiap detik ke semua player
     room.timerInterval = setInterval(() => {
         if (!activeRooms[roomId]) {
             clearInterval(room.timerInterval);
@@ -262,48 +239,54 @@ function nextQuestion(roomId) {
     room.currentQuestion++;
 
     if (room.currentQuestion >= room.questions.length) {
-        // ✅ Kirim data lengkap untuk podium
         const finalPlayers = room.players.map(p => ({
             ...p,
             totalQuestions: room.questions.length,
         }));
         io.to(roomId).emit('game_over', {
-            players: finalPlayers,
+            players:  finalPlayers,
             category: room.category,
-            total: room.questions.length,
+            total:    room.questions.length,
         });
         return;
     }
 
-    // Reset sudah jawab
+    const q = room.questions[room.currentQuestion];
+    io.to(roomId).emit('next_question', {
+        index:    room.currentQuestion,
+        total:    room.questions.length,
+        question: q.question,
+        options:  q.options,
+    });
+
     room.answeredPlayers = {};
 
-    // Start timer baru
     startGameTimer(roomId);
 }
 
+// =============================================
+// SOCKET.IO
+// =============================================
 io.on('connection', (socket) => {
     console.log('New connection:', socket.id);
 
-    // 1. HOST MEMBUAT ROOM
     socket.on('create_room', (data) => {
         const { roomId, roomPass, hostName } = data;
         activeRooms[roomId] = {
-            password: roomPass,
-            hostId: socket.id,
-            players: [{ id: socket.id, name: hostName, score: 0, correct: 0, totalTime: 0 }],
-            questions: [],
+            password:        roomPass,
+            hostId:          socket.id,
+            players:         [{ id: socket.id, name: hostName, score: 0, correct: 0, totalTime: 0 }],
+            questions:       [],
             currentQuestion: -1,
             answeredPlayers: {},
-            timeLeft: QUESTION_TIME,
-            timerInterval: null,
+            timeLeft:        QUESTION_TIME,
+            timerInterval:   null,
         };
         socket.join(roomId);
         io.to(roomId).emit('update_players', activeRooms[roomId].players);
         console.log(`Arena Created: ${roomId} by ${hostName}`);
     });
 
-    // 2. GUEST BERGABUNG
     socket.on('join_room', (data, callback) => {
         const { roomId, roomPass, playerName } = data;
         const room = activeRooms[roomId];
@@ -319,25 +302,20 @@ io.on('connection', (socket) => {
         callback({ status: "success" });
     });
 
-    // 3. MULAI GAME — server yang pegang soal dan timer
     socket.on('start_game', (data) => {
         const { roomId, category } = data;
         const room = activeRooms[roomId];
         if (!room) return;
 
-        // Ambil soal dari server, shuffle
-        const questions = shuffleArray(QUESTION_BANK[category] || []);
-        room.questions = questions;
+        const questions      = shuffleArray(QUESTION_BANK[category] || []);
+        room.questions       = questions;
         room.currentQuestion = -1;
         room.answeredPlayers = {};
-        room.category = category;
+        room.category        = category;
 
-        // Kirim signal start + kategori ke semua player
         io.to(roomId).emit('receive_start_game', category);
-
         console.log(`🚀 Arena ${roomId} launching: ${category} (${questions.length} soal)`);
 
-        // Countdown 3 detik sebelum soal pertama
         let countdown = 3;
         io.to(roomId).emit('countdown', countdown);
 
@@ -347,22 +325,22 @@ io.on('connection', (socket) => {
                 io.to(roomId).emit('countdown', countdown);
             } else {
                 clearInterval(countdownInterval);
-                nextQuestion(roomId);
+                setTimeout(() => {
+                    nextQuestion(roomId);
+                }, 500);
             }
         }, 1000);
     });
 
-    // 4. PLAYER JAWAB — validasi di server
     socket.on('submit_answer', (data) => {
         const { roomId, answerIndex, timeUsed } = data;
         const room = activeRooms[roomId];
         if (!room) return;
 
-        // Cegah jawab dua kali
         if (room.answeredPlayers[socket.id]) return;
         room.answeredPlayers[socket.id] = true;
 
-        const q = room.questions[room.currentQuestion];
+        const q      = room.questions[room.currentQuestion];
         const player = room.players.find(p => p.id === socket.id);
         if (!player || !q) return;
 
@@ -372,12 +350,11 @@ io.on('connection', (socket) => {
         let gainedScore = 0;
         if (isCorrect) {
             const timeBonus = Math.max(0, QUESTION_TIME - (timeUsed || 0));
-            gainedScore = 100 + (timeBonus * 10);
-            player.score += gainedScore;
+            gainedScore     = 100 + (timeBonus * 10);
+            player.score   += gainedScore;
             player.correct += 1;
         }
 
-        // Kirim hasil jawaban hanya ke player yang bersangkutan
         socket.emit('answer_result', {
             isCorrect,
             correctAnswer: q.answer,
@@ -385,31 +362,24 @@ io.on('connection', (socket) => {
             totalScore: player.score,
         });
 
-        // Update leaderboard semua player
         io.to(roomId).emit('update_players', room.players);
 
-        // Cek apakah semua player sudah jawab
-        const totalPlayers = room.players.length;
+        const totalPlayers  = room.players.length;
         const totalAnswered = Object.keys(room.answeredPlayers).length;
         if (totalAnswered >= totalPlayers) {
-            // Semua sudah jawab, lanjut soal berikutnya
             if (room.timerInterval) clearInterval(room.timerInterval);
-            setTimeout(() => nextQuestion(roomId), 1500); // delay 1.5 detik biar bisa lihat hasil
+            setTimeout(() => nextQuestion(roomId), 1500);
         }
     });
 
-    // 5. TERMINATE ROOM
     socket.on('cancel_room', (roomId) => {
         const room = activeRooms[roomId];
-        if (room) {
-            if (room.timerInterval) clearInterval(room.timerInterval);
-        }
+        if (room && room.timerInterval) clearInterval(room.timerInterval);
         io.to(roomId).emit('room_terminated', "Host telah mengakhiri permainan.");
         delete activeRooms[roomId];
         console.log(`Room ${roomId} terminated by Host`);
     });
 
-    // 6. DISCONNECT
     socket.on('disconnecting', () => {
         socket.rooms.forEach(room => {
             if (activeRooms[room] && activeRooms[room].hostId === socket.id) {
