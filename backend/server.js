@@ -9,7 +9,6 @@ app.use(cors());
 app.use(express.json());
 
 const server = http.createServer(app);
-
 const PORT = process.env.APP_PORT || 8080;
 
 const ALLOWED_ORIGINS = [
@@ -25,24 +24,23 @@ const io = new Server(server, {
 });
 
 // =============================================
-// DATABASE CONNECTION
+// DATABASE
 // =============================================
 let pool;
 
 async function connectDB() {
     try {
         console.log("🔌 Connecting to DB...");
-
         pool = mysql.createPool({
-            host: process.env.MYSQLHOST,
-            port: parseInt(process.env.MYSQLPORT),
-            user: process.env.MYSQLUSER,
-            password: process.env.MYSQLPASSWORD,
-            database: process.env.MYSQLDATABASE,
+            host:               process.env.MYSQLHOST || "shortline.proxy.rlwy.net",
+            port:               parseInt(process.env.MYSQLPORT) || 27837,
+            user:               process.env.MYSQLUSER || "root",
+            password:           process.env.MYSQLPASSWORD || "UpecDTEIvcUcUGJzYPXlhdwjAQNJBNcQ",
+            database:           process.env.MYSQLDATABASE || "railway",
             waitForConnections: true,
-            connectionLimit: 10,
-            connectTimeout: 60000,
-            ssl: { rejectUnauthorized: false }
+            connectionLimit:    10,
+            connectTimeout:     60000,
+            ssl:                { rejectUnauthorized: false }
         });
 
         const conn = await pool.getConnection();
@@ -69,10 +67,12 @@ async function connectDB() {
 connectDB();
 
 // =============================================
-// API ROUTES (Pengganti PHP)
+// API ROUTES
 // =============================================
+app.get('/', (req, res) => {
+    res.json({ status: "ok", message: "🚀 Wippy Engine Running" });
+});
 
-// GET /api/leaderboard — pengganti get_leaderboard.php
 app.get('/api/leaderboard', async (req, res) => {
     try {
         const [rows] = await pool.execute(`
@@ -88,18 +88,16 @@ app.get('/api/leaderboard', async (req, res) => {
     }
 });
 
-// POST /api/save-score — pengganti save_score.php
 app.post('/api/save-score', async (req, res) => {
     try {
         const {
             playerName = "Anonymous",
-            score = 0,
-            accuracy = 0,
-            avgTime = 0,
-            roomId = "Global"
+            score      = 0,
+            accuracy   = 0,
+            avgTime    = 0,
+            roomId     = "Global"
         } = req.body;
 
-        // Cek apakah player sudah ada di room ini
         const [existing] = await pool.execute(
             "SELECT id FROM leaderboard WHERE player_name = ? AND room_id = ?",
             [playerName, roomId]
@@ -121,74 +119,300 @@ app.post('/api/save-score', async (req, res) => {
     }
 });
 
-// Health check
-app.get('/', (req, res) => {
-    res.json({ status: "ok", message: "🚀 Wippy Engine Running" });
-});
+// =============================================
+// QUESTION BANK (dipindah ke server)
+// =============================================
+const QUESTION_BANK = {
+    PHP: [
+        { question: "Apa fungsi dari 'echo' di PHP?", options: ["Input Data", "Output Teks", "Hapus Variabel", "Koneksi Database"], answer: 1 },
+        { question: "Variabel di PHP selalu dimulai dengan simbol?", options: ["#", "@", "$", "&"], answer: 2 },
+        { question: "Fungsi untuk mendapatkan panjang string di PHP?", options: ["length()", "strlen()", "strcount()", "size()"], answer: 1 },
+        { question: "Cara menulis komentar satu baris di PHP?", options: ["/* komentar */", "<!-- komentar -->", "// komentar", "## komentar"], answer: 2 },
+        { question: "Fungsi untuk menggabungkan array di PHP?", options: ["array_merge()", "array_join()", "array_combine()", "array_push()"], answer: 0 },
+        { question: "Cara membuat array di PHP?", options: ["array = []", "$array = []", "#array = []", "@array = []"], answer: 1 },
+        { question: "Fungsi untuk mengubah string menjadi huruf besar di PHP?", options: ["toUpper()", "str_upper()", "strtoupper()", "uppercase()"], answer: 2 },
+        { question: "Apa ekstensi file PHP?", options: [".ph", ".php", ".php3", ".phpp"], answer: 1 },
+        { question: "Operator perbandingan identik di PHP adalah?", options: ["==", "!=", "===", "!=="], answer: 2 },
+        { question: "Fungsi untuk menghitung jumlah elemen array di PHP?", options: ["length()", "size()", "count()", "total()"], answer: 2 },
+        { question: "Cara mengakses elemen pertama array $arr di PHP?", options: ["$arr[1]", "$arr[0]", "$arr.first()", "$arr->0"], answer: 1 },
+        { question: "Fungsi untuk mengecek apakah variabel kosong di PHP?", options: ["isNull()", "isEmpty()", "empty()", "isVoid()"], answer: 2 },
+        { question: "Apa output dari: echo 10 % 3; di PHP?", options: ["3", "1", "0", "2"], answer: 1 },
+        { question: "Cara include file lain di PHP?", options: ["import 'file.php'", "require 'file.php'", "load 'file.php'", "fetch 'file.php'"], answer: 1 },
+        { question: "Superglobal untuk mengambil data dari form POST di PHP?", options: ["$_GET", "$_POST", "$_REQUEST", "$_FORM"], answer: 1 },
+        { question: "Fungsi untuk memecah string menjadi array di PHP?", options: ["str_split()", "explode()", "split()", "chunk()"], answer: 1 },
+        { question: "Cara mendefinisikan konstanta di PHP?", options: ["const NAME = value", "define('NAME', value)", "let NAME = value", "final NAME = value"], answer: 1 },
+        { question: "Fungsi untuk mengecek tipe data di PHP?", options: ["typeOf()", "gettype()", "checktype()", "typeof()"], answer: 1 },
+        { question: "Apa fungsi isset() di PHP?", options: ["Menghapus variabel", "Mengecek apakah variabel sudah didefinisikan dan tidak null", "Membuat variabel baru", "Mengeset nilai variabel"], answer: 1 },
+        { question: "Cara membuat loop yang pasti dijalankan minimal sekali di PHP?", options: ["for", "while", "do...while", "foreach"], answer: 2 },
+    ],
+    JAVASCRIPT: [
+        { question: "Cara mendeklarasikan variabel yang nilainya tidak bisa diubah?", options: ["let", "var", "const", "static"], answer: 2 },
+        { question: "Apa hasil dari typeof []?", options: ["array", "object", "null", "undefined"], answer: 1 },
+        { question: "Method array untuk menambah elemen di akhir?", options: ["push()", "pop()", "shift()", "unshift()"], answer: 0 },
+        { question: "Cara membuat arrow function di JavaScript?", options: ["function => () {}", "const fn = () => {}", "fn() -> {}", "def fn() {}"], answer: 1 },
+        { question: "Apa hasil dari: console.log(0 == '0')?", options: ["false", "true", "undefined", "error"], answer: 1 },
+        { question: "Apa hasil dari: console.log(0 === '0')?", options: ["true", "false", "undefined", "error"], answer: 1 },
+        { question: "Method untuk menghapus elemen terakhir array?", options: ["push()", "pop()", "slice()", "splice()"], answer: 1 },
+        { question: "Cara mengakses properti objek di JavaScript?", options: ["obj->name", "obj::name", "obj.name", "obj[name]"], answer: 2 },
+        { question: "Fungsi built-in untuk mengubah string ke integer?", options: ["toInt()", "parseInt()", "Number.toInt()", "convertInt()"], answer: 1 },
+        { question: "Apa itu closure di JavaScript?", options: ["Fungsi yang menutup program", "Fungsi yang mengakses variabel dari scope luarnya", "Cara menutup koneksi database", "Method untuk menutup modal"], answer: 1 },
+        { question: "Method array untuk membuat array baru hasil transformasi?", options: ["forEach()", "filter()", "map()", "reduce()"], answer: 2 },
+        { question: "Apa hasil dari: typeof null?", options: ["null", "undefined", "object", "string"], answer: 2 },
+        { question: "Cara membuat Promise di JavaScript?", options: ["new Promise((resolve, reject) => {})", "Promise.create(() => {})", "async Promise() {}", "promise(() => {})"], answer: 0 },
+        { question: "Apa fungsi dari async/await di JavaScript?", options: ["Membuat kode berjalan lebih cepat", "Menangani operasi asynchronous dengan syntax yang lebih bersih", "Membuat multiple thread", "Mengoptimasi performa"], answer: 1 },
+        { question: "Method untuk menggabungkan dua array di JavaScript?", options: ["join()", "merge()", "concat()", "combine()"], answer: 2 },
+        { question: "Apa itu event bubbling di JavaScript?", options: ["Animasi gelembung di CSS", "Event yang merambat dari child ke parent element", "Cara membuat event baru", "Method untuk menghapus event listener"], answer: 1 },
+        { question: "Cara destructuring array di JavaScript?", options: ["const {a, b} = arr", "const [a, b] = arr", "const (a, b) = arr", "const <a, b> = arr"], answer: 1 },
+        { question: "Apa hasil dari: [1,2,3].reduce((acc, val) => acc + val, 0)?", options: ["123", "6", "0", "undefined"], answer: 1 },
+        { question: "Spread operator di JavaScript menggunakan simbol?", options: ["..", "...", "**", "->"], answer: 1 },
+        { question: "Method untuk mengecek apakah semua elemen array memenuhi kondisi?", options: ["some()", "every()", "find()", "includes()"], answer: 1 },
+    ],
+    CSS: [
+        { question: "Properti untuk mengubah warna latar belakang?", options: ["color", "bg-color", "background-color", "fill"], answer: 2 },
+        { question: "Properti CSS untuk mengubah ukuran font?", options: ["text-size", "font-size", "font-weight", "text-scale"], answer: 1 },
+        { question: "Value display untuk membuat flexbox?", options: ["block", "inline", "flex", "grid"], answer: 2 },
+        { question: "Properti untuk memberi jarak di dalam elemen?", options: ["margin", "padding", "spacing", "gap"], answer: 1 },
+        { question: "Properti untuk memberi jarak di luar elemen?", options: ["padding", "margin", "border", "outline"], answer: 1 },
+        { question: "Selector CSS untuk memilih elemen dengan id 'header'?", options: [".header", "#header", "*header", "@header"], answer: 1 },
+        { question: "Selector CSS untuk memilih elemen dengan class 'btn'?", options: ["#btn", ".btn", "*btn", "btn"], answer: 1 },
+        { question: "Properti untuk mengatur posisi elemen secara absolut?", options: ["display: absolute", "position: absolute", "float: absolute", "align: absolute"], answer: 1 },
+        { question: "Cara membuat teks menjadi tebal di CSS?", options: ["font-style: bold", "text-weight: bold", "font-weight: bold", "text-style: bold"], answer: 2 },
+        { question: "Properti untuk mengatur transparansi elemen?", options: ["transparency", "visibility", "opacity", "alpha"], answer: 2 },
+        { question: "Unit CSS yang relatif terhadap ukuran viewport width?", options: ["px", "em", "rem", "vw"], answer: 3 },
+        { question: "Properti flexbox untuk mengatur alignment di sumbu utama?", options: ["align-items", "justify-content", "flex-direction", "flex-wrap"], answer: 1 },
+        { question: "Cara membuat border radius melingkar sempurna?", options: ["border-radius: 0", "border-radius: 100px", "border-radius: 50%", "border-radius: round"], answer: 2 },
+        { question: "Properti untuk mengatur urutan stack elemen?", options: ["stack-order", "z-index", "layer", "depth"], answer: 1 },
+        { question: "Pseudo-class untuk style saat hover?", options: [":hover", "::hover", ".hover", "#hover"], answer: 0 },
+        { question: "Properti untuk menyembunyikan elemen tapi tetap occupying space?", options: ["display: none", "visibility: hidden", "opacity: 0", "hidden: true"], answer: 1 },
+        { question: "CSS Grid property untuk mendefinisikan kolom?", options: ["grid-columns", "grid-template-columns", "column-template", "grid-cols"], answer: 1 },
+        { question: "Cara membuat animasi CSS?", options: ["@transition", "@animation", "@keyframes", "@motion"], answer: 2 },
+        { question: "Properti untuk mengatur jarak antar elemen dalam flexbox/grid?", options: ["spacing", "margin", "gap", "padding"], answer: 2 },
+        { question: "Media query untuk layar dengan lebar maksimal 768px?", options: ["@media (min-width: 768px)", "@media (max-width: 768px)", "@media screen 768px", "@media (width: 768px)"], answer: 1 },
+    ],
+    REACT: [
+        { question: "Hook untuk menyimpan state di functional component?", options: ["useEffect", "useRef", "useState", "useContext"], answer: 2 },
+        { question: "Hook untuk side effects di React?", options: ["useState", "useEffect", "useCallback", "useMemo"], answer: 1 },
+        { question: "Cara passing data dari parent ke child component?", options: ["state", "props", "context", "ref"], answer: 1 },
+        { question: "Apa itu JSX di React?", options: ["JavaScript Extension untuk database", "Syntax extension yang memungkinkan menulis HTML di JavaScript", "Library untuk styling", "Package manager React"], answer: 1 },
+        { question: "Key prop pada list di React berfungsi untuk?", options: ["Styling elemen list", "Membantu React mengidentifikasi item yang berubah", "Mengurutkan list", "Memberi akses keyboard"], answer: 1 },
+        { question: "Hook untuk memoize nilai agar tidak dihitung ulang?", options: ["useCallback", "useRef", "useMemo", "useReducer"], answer: 2 },
+        { question: "Cara update state array di React tanpa mutasi?", options: ["state.push(newItem)", "setState([...state, newItem])", "state.add(newItem)", "setState(state + newItem)"], answer: 1 },
+        { question: "Apa itu Virtual DOM di React?", options: ["DOM yang tersimpan di database", "Representasi ringan dari DOM asli di memori", "DOM untuk virtual reality", "Plugin untuk manipulasi DOM"], answer: 1 },
+        { question: "Hook untuk menyimpan referensi ke DOM element?", options: ["useState", "useEffect", "useRef", "useContext"], answer: 2 },
+        { question: "Cara conditional rendering di React?", options: ["if/else statement saja", "Ternary operator atau && operator", "switch statement saja", "try/catch saja"], answer: 1 },
+        { question: "React.Fragment digunakan untuk?", options: ["Memecah komponen", "Membungkus multiple element tanpa tambah DOM node", "Membuat animasi", "Mengoptimasi performa"], answer: 1 },
+        { question: "Hook untuk share state tanpa prop drilling?", options: ["useState", "useReducer", "useContext", "useRef"], answer: 2 },
+        { question: "Lifecycle yang setara dengan useEffect(() => {}, []) di class component?", options: ["componentDidUpdate", "componentWillUnmount", "componentDidMount", "shouldComponentUpdate"], answer: 2 },
+        { question: "Cara mencegah re-render component yang tidak perlu?", options: ["React.lazy", "React.memo", "React.Fragment", "React.strict"], answer: 1 },
+        { question: "Apa itu controlled component di React?", options: ["Component yang dikontrol CSS", "Form element yang nilainya dikontrol oleh React state", "Component dengan akses penuh ke DOM", "Component yang tidak bisa di-render ulang"], answer: 1 },
+        { question: "Package untuk routing di React?", options: ["react-router", "react-navigation", "react-router-dom", "react-path"], answer: 2 },
+        { question: "useCallback digunakan untuk?", options: ["Membuat callback baru setiap render", "Memoize fungsi agar referensinya stabil", "Menjalankan callback setelah render", "Menghapus event listener"], answer: 1 },
+        { question: "Cara lazy loading component di React?", options: ["React.lazy(() => import('./Component'))", "lazy.import('./Component')", "React.import('./Component')", "import.lazy('./Component')"], answer: 0 },
+        { question: "Error boundary di React digunakan untuk?", options: ["Validasi form", "Menangkap JavaScript error di component tree", "Membatasi ukuran bundle", "Mengatur batas animasi"], answer: 1 },
+        { question: "Perbedaan useEffect dengan useLayoutEffect?", options: ["Tidak ada perbedaan", "useLayoutEffect berjalan setelah browser paint, useEffect sebelumnya", "useLayoutEffect berjalan sebelum browser paint, useEffect setelahnya", "useLayoutEffect hanya untuk styling"], answer: 2 },
+    ],
+};
+
+// Helper: shuffle array
+function shuffleArray(arr) {
+    return [...arr].sort(() => Math.random() - 0.5);
+}
 
 // =============================================
-// SOCKET.IO
+// SOCKET.IO — GAME LOGIC
 // =============================================
 const activeRooms = {};
+const QUESTION_TIME = 10; // detik per soal
+
+function startGameTimer(roomId) {
+    const room = activeRooms[roomId];
+    if (!room) return;
+
+    // Bersihkan timer sebelumnya
+    if (room.timerInterval) clearInterval(room.timerInterval);
+    if (room.questionTimeout) clearTimeout(room.questionTimeout);
+
+    room.timeLeft = QUESTION_TIME;
+
+    // Kirim tick setiap detik ke semua player
+    room.timerInterval = setInterval(() => {
+        if (!activeRooms[roomId]) {
+            clearInterval(room.timerInterval);
+            return;
+        }
+
+        room.timeLeft--;
+        io.to(roomId).emit('timer_tick', room.timeLeft);
+
+        if (room.timeLeft <= 0) {
+            clearInterval(room.timerInterval);
+            nextQuestion(roomId);
+        }
+    }, 1000);
+}
+
+function nextQuestion(roomId) {
+    const room = activeRooms[roomId];
+    if (!room) return;
+
+    if (room.timerInterval) clearInterval(room.timerInterval);
+
+    room.currentQuestion++;
+
+    if (room.currentQuestion >= room.questions.length) {
+        // Game selesai
+        io.to(roomId).emit('game_over', room.players);
+        return;
+    }
+
+    // Kirim soal berikutnya TANPA jawaban
+    const q = room.questions[room.currentQuestion];
+    io.to(roomId).emit('next_question', {
+        index:    room.currentQuestion,
+        total:    room.questions.length,
+        question: q.question,
+        options:  q.options,
+    });
+
+    // Reset sudah jawab
+    room.answeredPlayers = {};
+
+    // Start timer baru
+    startGameTimer(roomId);
+}
 
 io.on('connection', (socket) => {
     console.log('New connection:', socket.id);
 
+    // 1. HOST MEMBUAT ROOM
     socket.on('create_room', (data) => {
         const { roomId, roomPass, hostName } = data;
         activeRooms[roomId] = {
-            password: roomPass,
-            hostId: socket.id,
-            players: [{ id: socket.id, name: hostName, score: 0 }]
+            password:        roomPass,
+            hostId:          socket.id,
+            players:         [{ id: socket.id, name: hostName, score: 0, correct: 0, totalTime: 0 }],
+            questions:       [],
+            currentQuestion: -1,
+            answeredPlayers: {},
+            timeLeft:        QUESTION_TIME,
+            timerInterval:   null,
         };
         socket.join(roomId);
         io.to(roomId).emit('update_players', activeRooms[roomId].players);
         console.log(`Arena Created: ${roomId} by ${hostName}`);
     });
 
+    // 2. GUEST BERGABUNG
     socket.on('join_room', (data, callback) => {
         const { roomId, roomPass, playerName } = data;
         const room = activeRooms[roomId];
         if (!room) return callback({ status: "error", message: "Arena not found!" });
         if (room.password !== roomPass) return callback({ status: "error", message: "Wrong password!" });
+
         const isAlreadyIn = room.players.find(p => p.id === socket.id);
         if (!isAlreadyIn) {
-            room.players.push({ id: socket.id, name: playerName, score: 0 });
+            room.players.push({ id: socket.id, name: playerName, score: 0, correct: 0, totalTime: 0 });
         }
         socket.join(roomId);
         io.to(roomId).emit('update_players', room.players);
         callback({ status: "success" });
     });
 
+    // 3. MULAI GAME — server yang pegang soal dan timer
     socket.on('start_game', (data) => {
         const { roomId, category } = data;
-        if (activeRooms[roomId]) {
-            console.log(`🚀 Arena ${roomId} launching: ${category}`);
-            io.to(roomId).emit('receive_start_game', category);
+        const room = activeRooms[roomId];
+        if (!room) return;
+
+        // Ambil soal dari server, shuffle
+        const questions = shuffleArray(QUESTION_BANK[category] || []);
+        room.questions       = questions;
+        room.currentQuestion = -1;
+        room.answeredPlayers = {};
+        room.category        = category;
+
+        // Kirim signal start + kategori ke semua player
+        io.to(roomId).emit('receive_start_game', category);
+
+        console.log(`🚀 Arena ${roomId} launching: ${category} (${questions.length} soal)`);
+
+        // Countdown 3 detik sebelum soal pertama
+        let countdown = 3;
+        io.to(roomId).emit('countdown', countdown);
+
+        const countdownInterval = setInterval(() => {
+            countdown--;
+            if (countdown > 0) {
+                io.to(roomId).emit('countdown', countdown);
+            } else {
+                clearInterval(countdownInterval);
+                nextQuestion(roomId);
+            }
+        }, 1000);
+    });
+
+    // 4. PLAYER JAWAB — validasi di server
+    socket.on('submit_answer', (data) => {
+        const { roomId, answerIndex, timeUsed } = data;
+        const room = activeRooms[roomId];
+        if (!room) return;
+
+        // Cegah jawab dua kali
+        if (room.answeredPlayers[socket.id]) return;
+        room.answeredPlayers[socket.id] = true;
+
+        const q      = room.questions[room.currentQuestion];
+        const player = room.players.find(p => p.id === socket.id);
+        if (!player || !q) return;
+
+        const isCorrect = answerIndex === q.answer;
+        player.totalTime += timeUsed || 0;
+
+        let gainedScore = 0;
+        if (isCorrect) {
+            const timeBonus = Math.max(0, QUESTION_TIME - (timeUsed || 0));
+            gainedScore     = 100 + (timeBonus * 10);
+            player.score   += gainedScore;
+            player.correct += 1;
+        }
+
+        // Kirim hasil jawaban hanya ke player yang bersangkutan
+        socket.emit('answer_result', {
+            isCorrect,
+            correctAnswer: q.answer,
+            gainedScore,
+            totalScore: player.score,
+        });
+
+        // Update leaderboard semua player
+        io.to(roomId).emit('update_players', room.players);
+
+        // Cek apakah semua player sudah jawab
+        const totalPlayers  = room.players.length;
+        const totalAnswered = Object.keys(room.answeredPlayers).length;
+        if (totalAnswered >= totalPlayers) {
+            // Semua sudah jawab, lanjut soal berikutnya
+            if (room.timerInterval) clearInterval(room.timerInterval);
+            setTimeout(() => nextQuestion(roomId), 1500); // delay 1.5 detik biar bisa lihat hasil
         }
     });
 
-    socket.on('update_score', (data) => {
-        const { roomId, score } = data;
+    // 5. TERMINATE ROOM
+    socket.on('cancel_room', (roomId) => {
         const room = activeRooms[roomId];
         if (room) {
-            const player = room.players.find(p => p.id === socket.id);
-            if (player) {
-                player.score = score;
-                io.to(roomId).emit('update_players', room.players);
-            }
+            if (room.timerInterval) clearInterval(room.timerInterval);
         }
-    });
-
-    socket.on('cancel_room', (roomId) => {
         io.to(roomId).emit('room_terminated', "Host telah mengakhiri permainan.");
         delete activeRooms[roomId];
         console.log(`Room ${roomId} terminated by Host`);
     });
 
+    // 6. DISCONNECT
     socket.on('disconnecting', () => {
         socket.rooms.forEach(room => {
             if (activeRooms[room] && activeRooms[room].hostId === socket.id) {
+                if (activeRooms[room].timerInterval) clearInterval(activeRooms[room].timerInterval);
                 io.to(room).emit('room_terminated', "Host terputus. Ruangan dibubarkan.");
                 delete activeRooms[room];
             }
