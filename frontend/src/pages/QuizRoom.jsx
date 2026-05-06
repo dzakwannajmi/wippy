@@ -16,6 +16,7 @@ import {
     IoRadioOutline,
     IoCheckmarkCircleOutline,
     IoCloseCircleOutline,
+    IoColorPaletteOutline,   // ← tambah ini
 } from "react-icons/io5";
 
 // Kategori yang tersedia (tidak perlu import QUESTION_BANK lagi)
