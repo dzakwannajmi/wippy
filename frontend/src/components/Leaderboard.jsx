@@ -20,7 +20,7 @@ export default function Leaderboard() {
     useEffect(() => {
         const fetchLeaderboard = async () => {
             try {
-                const response = await fetch("http://localhost:8000/get_leaderboard.php");
+                const response = await fetch(`${import.meta.env.VITE_API_URL}/api/leaderboard`);
                 const data = await response.json();
 
                 const sortedData = Array.isArray(data)

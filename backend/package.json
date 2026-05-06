@@ -1,7 +1,7 @@
 {
   "name": "wippy-backend",
   "version": "1.0.0",
-  "description": "Wippy Arena Socket.io Backend",
+  "description": "Wippy Arena Backend",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
@@ -14,6 +14,7 @@
   "dependencies": {
     "cors": "^2.8.6",
     "express": "^5.2.1",
+    "mysql2": "^3.11.0",
     "socket.io": "^4.8.3"
   },
   "engines": {

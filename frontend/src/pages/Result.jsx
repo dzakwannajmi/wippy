@@ -36,7 +36,7 @@ export default function Result() {
             setSaveStatus("Syncing Telemetry...");
 
             try {
-                const response = await fetch("http://localhost:8000/save_score.php", {
+                const response = await fetch(`${import.meta.env.VITE_API_URL}/api/save-score`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ playerName, score, accuracy, avgTime, roomId }),
