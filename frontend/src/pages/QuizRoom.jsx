@@ -6,7 +6,6 @@ import WaitingArena from "../components/WaitingArena";
 import PixelBlast from "../components/PixelBlast";
 
 import { SiPhp, SiJavascript, SiReact } from 'react-icons/si';
-import { IoColorPaletteOutline } from 'react-icons/io5';
 import {
     IoFingerPrintOutline,
     IoAnalyticsOutline,
@@ -16,7 +15,7 @@ import {
     IoRadioOutline,
     IoCheckmarkCircleOutline,
     IoCloseCircleOutline,
-    IoColorPaletteOutline,   // ← tambah ini
+    IoColorPaletteOutline,
 } from "react-icons/io5";
 
 // Kategori yang tersedia (tidak perlu import QUESTION_BANK lagi)
