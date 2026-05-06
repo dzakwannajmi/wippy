@@ -10,7 +10,7 @@ app.use(express.json());
 
 const server = http.createServer(app);
 
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.APP_PORT || 8080;
 
 const ALLOWED_ORIGINS = [
     "http://localhost:5173",
@@ -27,27 +27,28 @@ const io = new Server(server, {
 // =============================================
 // DATABASE CONNECTION
 // =============================================
-const dbConfig = {
-    host:     process.env.DB_HOST,
-    port:     process.env.DB_PORT || 3306,
-    user:     process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    database: process.env.DB_NAME,
-    waitForConnections: true,
-    connectionLimit: 10,
-};
-
 let pool;
 
 async function connectDB() {
     try {
-        pool = mysql.createPool(dbConfig);
-        // Test koneksi
+        console.log("🔌 Connecting to DB...");
+
+        pool = mysql.createPool({
+            host: process.env.MYSQLHOST,
+            port: parseInt(process.env.MYSQLPORT),
+            user: process.env.MYSQLUSER,
+            password: process.env.MYSQLPASSWORD,
+            database: process.env.MYSQLDATABASE,
+            waitForConnections: true,
+            connectionLimit: 10,
+            connectTimeout: 60000,
+            ssl: { rejectUnauthorized: false }
+        });
+
         const conn = await pool.getConnection();
         console.log("✅ Database connected successfully");
         conn.release();
 
-        // Auto-create table kalau belum ada
         await pool.execute(`
             CREATE TABLE IF NOT EXISTS leaderboard (
                 id INT AUTO_INCREMENT PRIMARY KEY,
