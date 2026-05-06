@@ -7,9 +7,19 @@ const app = express();
 app.use(cors());
 
 const server = http.createServer(app);
+
+// ✅ Ambil PORT dari Railway secara otomatis
+const PORT = process.env.PORT || 3001;
+
+// ✅ CORS support untuk localhost dev + Vercel production
+const ALLOWED_ORIGINS = [
+    "http://localhost:5173",
+    process.env.FRONTEND_URL,
+].filter(Boolean); // hapus undefined kalau FRONTEND_URL belum di-set
+
 const io = new Server(server, {
     cors: {
-        origin: "http://localhost:5173", // URL React kamu
+        origin: ALLOWED_ORIGINS,
         methods: ["GET", "POST"]
     }
 });
@@ -52,13 +62,12 @@ io.on('connection', (socket) => {
         callback({ status: "success" });
     });
 
-    // 3. MULAI GAME (FIXED: Sekarang menerima object dan menyebarkan kategori)
+    // 3. MULAI GAME
     socket.on('start_game', (data) => {
         const { roomId, category } = data;
 
         if (activeRooms[roomId]) {
             console.log(`🚀 Arena ${roomId} launching quiz category: ${category}`);
-            // Mengirim signal 'receive_start_game' beserta nama kategorinya
             io.to(roomId).emit('receive_start_game', category);
         }
     });
@@ -76,7 +85,7 @@ io.on('connection', (socket) => {
         }
     });
 
-    // 5. TERMINATE ROOM (HOST CANCEL)
+    // 5. TERMINATE ROOM
     socket.on('cancel_room', (roomId) => {
         io.to(roomId).emit('room_terminated', "Host telah mengakhiri permainan.");
         delete activeRooms[roomId];
@@ -98,6 +107,7 @@ io.on('connection', (socket) => {
     });
 });
 
-server.listen(3001, () => {
-    console.log("🚀 WIPPY ENGINE READY ON PORT 3001");
+// ✅ Gunakan PORT dari env, bukan hardcoded 3001
+server.listen(PORT, () => {
+    console.log(`🚀 WIPPY ENGINE READY ON PORT ${PORT}`);
 });

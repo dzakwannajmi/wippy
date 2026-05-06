@@ -20,7 +20,7 @@ import {
 
 import { QUESTION_BANK } from "../../question";
 
-const socket = io("http://localhost:3001");
+const socket = io(import.meta.env.VITE_SOCKET_URL || "http://localhost:3001");
 
 export default function QuizRoom() {
     const navigate = useNavigate();
