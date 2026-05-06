@@ -123,29 +123,20 @@ export default function QuizRoom() {
         });
 
         // Game selesai
-        socket.on("game_over", (finalPlayers) => {
+        socket.on("game_over", (data) => {
             setGamePhase("game_over");
-            const me = finalPlayers.find(p => p.id === socket.id);
-            if (me) {
-                const accuracy = totalQuestions > 0
-                    ? (me.correct / totalQuestions) * 100
-                    : 0;
-                const avgTime = totalQuestions > 0
-                    ? me.totalTime / totalQuestions
-                    : 0;
 
-                setTimeout(() => {
-                    navigate("/result", {
-                        state: {
-                            score: me.score,
-                            accuracy,
-                            avgTime,
-                            playerName,
-                            roomId
-                        }
-                    });
-                }, 2000);
-            }
+            setTimeout(() => {
+                navigate("/podium", {
+                    state: {
+                        players: data.players,
+                        mySocketId: socket.id,
+                        playerName,
+                        roomId,
+                        category: data.category,
+                    }
+                });
+            }, 1500);
         });
 
         // Room diterminasi
@@ -206,11 +197,11 @@ export default function QuizRoom() {
     // --- TECH ICON ---
     const getTechIcon = (tech, size = 32) => {
         switch (tech) {
-            case 'PHP':        return <SiPhp size={size} className="text-[#777BB4]" />;
+            case 'PHP': return <SiPhp size={size} className="text-[#777BB4]" />;
             case 'JAVASCRIPT': return <SiJavascript size={size} className="text-[#F7DF1E]" />;
-            case 'CSS':        return <SiCss3 size={size} className="text-[#264DE4]" />;
-            case 'REACT':      return <SiReact size={size} className="text-[#61DAFB]" />;
-            default:           return null;
+            case 'CSS': return <SiCss3 size={size} className="text-[#264DE4]" />;
+            case 'REACT': return <SiReact size={size} className="text-[#61DAFB]" />;
+            default: return null;
         }
     };
 

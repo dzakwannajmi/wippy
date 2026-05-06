@@ -4,7 +4,8 @@ import ArenaEntry from "./pages/ArenaEntry";
 import QuizRoom from "./pages/QuizRoom";
 import Result from "./pages/Result";
 import Navbar from './components/Navbar';
-import Leaderboard from "./components/Leaderboard";   
+import Leaderboard from "./components/Leaderboard";
+import Podium from "./pages/Podium";  
 
 function App() {
   return (
@@ -19,8 +20,10 @@ function App() {
           <Route path="/entry" element={<ArenaEntry />} />
 
           <Route path="/result" element={<Result />} />
-          
+
           <Route path="/leaderboard" element={<Leaderboard />} />
+
+          <Route path="/podium" element={<Podium />} />
         </Routes>
       </main>
     </BrowserRouter>
