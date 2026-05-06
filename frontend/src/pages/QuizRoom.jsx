@@ -25,7 +25,7 @@ export default function QuizRoom() {
 
     // ✅ Socket dipindah ke dalam component + useMemo agar env terbaca
     const socket = useMemo(() => {
-        const url = import.meta.env.VITE_SOCKET_URL || "http://localhost:3001";
+        const url = import.meta.env.VITE_SOCKET_URL;
         console.log("🔌 Connecting to:", url);
         return io(url);
     }, []);
