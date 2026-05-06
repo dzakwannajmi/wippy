@@ -273,15 +273,6 @@ function nextQuestion(roomId) {
         return;
     }
 
-    // Kirim soal berikutnya TANPA jawaban
-    const q = room.questions[room.currentQuestion];
-    io.to(roomId).emit('next_question', {
-        index: room.currentQuestion,
-        total: room.questions.length,
-        question: q.question,
-        options: q.options,
-    });
-
     // Reset sudah jawab
     room.answeredPlayers = {};
 
