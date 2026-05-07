@@ -5,6 +5,7 @@ import CardSwap, { Card } from "../components/ui/CardSwap";
 import LogoLoop from "../components/LogoLoop";
 import MagicBento from "../components/MagicBento";
 import ScrollFloat from "../components/ScrollFloat";
+import Footer from "../components/Footer";
 
 // --- REACT ICONS ---
 import {
@@ -571,35 +572,6 @@ export default function Home() {
                         />
                     </div>
                 </section>
-
-                {/* =============================================
-                    FOOTER — Links and credits
-                ============================================= */}
-                <footer className="w-full border-t border-white/5 bg-black/40 backdrop-blur-2xl pt-20 pb-12 px-8 flex flex-col items-center">
-
-                    {/* Social links */}
-                    <div className="flex gap-12 mb-10">
-                        <a href="#" aria-label="Instagram" className="text-slate-500 hover:text-primary transition-all hover:-translate-y-1">
-                            <FaInstagram size={28} />
-                        </a>
-                        <a href="https://github.com/dzakwannajmi/wippy" aria-label="GitHub" className="text-slate-500 hover:text-primary transition-all hover:-translate-y-1">
-                            <FaGithub size={28} />
-                        </a>
-                        <a href="#" aria-label="Discord" className="text-slate-500 hover:text-primary transition-all hover:-translate-y-1">
-                            <FaDiscord size={28} />
-                        </a>
-                    </div>
-
-                    {/* Footer tagline and copyright */}
-                    <div className="text-center">
-                        <p className="text-[10px] text-primary font-medium tracking-[0.8em] uppercase mb-4 opacity-70">
-                            Knowledge is the ultimate weapon
-                        </p>
-                        <p className="text-[8px] text-slate-700 font-medium tracking-widest uppercase opacity-40">
-                            © 2026 WIPPY ENGINE • EMERALD EDITION • GLOBAL STACK DEPLOYED
-                        </p>
-                    </div>
-                </footer>
 
             </div>
         </div>
