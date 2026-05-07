@@ -47,6 +47,11 @@ export default function QuizRoom() {
     const [selectedAnswer, setSelectedAnswer] = useState(null);
     const [answerResult, setAnswerResult] = useState(null);
     const [hasAnswered, setHasAnswered] = useState(false);
+    const [combo, setCombo] = useState(0);
+    const [comboMultiplier, setComboMultiplier] = useState(1);
+    const [speedBonus, setSpeedBonus] = useState(0);
+    const [showComboPopup, setShowComboPopup] = useState(false);
+    const [showSpeedPopup, setShowSpeedPopup] = useState(false);
     const [myScore, setMyScore] = useState(0);
 
     useEffect(() => {
@@ -90,7 +95,23 @@ export default function QuizRoom() {
         socket.on("answer_result", (result) => {
             setAnswerResult(result);
             setMyScore(result.totalScore);
+            setCombo(result.combo);
+            setComboMultiplier(result.comboMultiplier);
+            setSpeedBonus(result.speedBonus);
             setGamePhase("answer_reveal");
+
+            // Show combo popup if combo >= 2
+            if (result.combo >= 2) {
+                setShowComboPopup(true);
+                setTimeout(() => setShowComboPopup(false), 1500);
+            }
+
+            // Show speed popup if got speed bonus
+            if (result.speedBonus > 0 && result.isCorrect) {
+                setShowSpeedPopup(true);
+                setTimeout(() => setShowSpeedPopup(false), 1500);
+            }
+
             setTimeout(() => setGamePhase("playing"), 1500);
         });
         socket.on("game_over", (data) => {
@@ -278,6 +299,55 @@ export default function QuizRoom() {
                                 <span className="font-mono text-primary text-lg">{myScore}</span>
                             </div>
                         </div>
+                        {/* Combo streak indicator */}
+                        <div className="space-y-4 pt-6 border-t border-white/5">
+                            <div className="flex justify-between items-center text-[10px]">
+                                <span className="text-slate-500 uppercase tracking-widest">Network_Score</span>
+                                <span className="font-mono text-primary text-lg">{myScore}</span>
+                            </div>
+
+                            {/* Combo display */}
+                            {combo >= 2 && (
+                                <motion.div
+                                    initial={{ opacity: 0, scale: 0.8 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    className={`flex items-center justify-between px-4 py-2 rounded-xl border ${combo >= 5 ? 'bg-orange-500/20 border-orange-500/40' :
+                                        combo >= 3 ? 'bg-yellow-500/20 border-yellow-500/40' :
+                                            'bg-primary/10 border-primary/20'
+                                        }`}
+                                >
+                                    <span className="text-[9px] uppercase tracking-widest text-slate-400">
+                                        Combo
+                                    </span>
+                                    <div className="flex items-center gap-2">
+                                        <span className={`text-sm font-bold ${combo >= 5 ? 'text-orange-400' :
+                                            combo >= 3 ? 'text-yellow-400' :
+                                                'text-primary'
+                                            }`}>
+                                            x{combo}
+                                        </span>
+                                        <span className="text-[8px] font-mono text-white/40">
+                                            {combo >= 5 ? '🔥 ON FIRE' :
+                                                combo >= 3 ? '⚡ HOT' :
+                                                    '✨ STREAK'}
+                                        </span>
+                                    </div>
+                                </motion.div>
+                            )}
+
+                            {/* Multiplier display */}
+                            {comboMultiplier > 1 && (
+                                <div className="flex justify-between items-center text-[10px]">
+                                    <span className="text-slate-500 uppercase tracking-widest">Multiplier</span>
+                                    <span className={`font-mono font-bold ${comboMultiplier >= 2 ? 'text-orange-400' :
+                                        comboMultiplier >= 1.5 ? 'text-yellow-400' :
+                                            'text-primary'
+                                        }`}>
+                                        {comboMultiplier}x
+                                    </span>
+                                </div>
+                            )}
+                        </div>
                     </motion.div>
 
                     <div className="glass-card-roadmap p-8 rounded-[2.5rem] border border-white/5 flex-1 shadow-2xl overflow-hidden">
@@ -398,27 +468,102 @@ export default function QuizRoom() {
                                     />
                                 </div>
 
+                                {/* Score breakdown popup — shows on correct answer */}
                                 <AnimatePresence>
-                                    {gamePhase === "answer_reveal" && answerResult && (
+                                    {gamePhase === "answer_reveal" && answerResult?.isCorrect && (
                                         <motion.div
-                                            initial={{ opacity: 0, y: -20 }}
-                                            animate={{ opacity: 1, y: 0 }}
-                                            exit={{ opacity: 0 }}
-                                            className={`absolute top-8 left-1/2 -translate-x-1/2 flex items-center gap-3 px-6 py-3 rounded-full border backdrop-blur-md z-20 ${answerResult.isCorrect
-                                                ? 'bg-green-500/20 border-green-500/40 text-green-400'
-                                                : 'bg-red-500/20 border-red-500/40 text-red-400'
-                                                }`}
+                                            initial={{ opacity: 0, y: 20, scale: 0.9 }}
+                                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                                            exit={{ opacity: 0, y: -10 }}
+                                            className="absolute bottom-8 right-8 flex flex-col items-end gap-1 z-20"
                                         >
-                                            {answerResult.isCorrect
-                                                ? <IoCheckmarkCircleOutline size={20} />
-                                                : <IoCloseCircleOutline size={20} />
-                                            }
-                                            <span className="text-[11px] font-medium uppercase tracking-widest">
-                                                {answerResult.isCorrect
-                                                    ? `+${answerResult.gainedScore} pts`
-                                                    : "Salah!"
-                                                }
-                                            </span>
+                                            {/* Base score */}
+                                            <div className="flex items-center gap-2 px-3 py-1 rounded-lg bg-white/5 border border-white/10">
+                                                <span className="text-[9px] text-slate-500 uppercase">Base</span>
+                                                <span className="text-[11px] font-mono text-white">+100</span>
+                                            </div>
+
+                                            {/* Speed bonus */}
+                                            {speedBonus > 0 && (
+                                                <motion.div
+                                                    initial={{ opacity: 0, x: 10 }}
+                                                    animate={{ opacity: 1, x: 0 }}
+                                                    transition={{ delay: 0.1 }}
+                                                    className="flex items-center gap-2 px-3 py-1 rounded-lg bg-blue-500/10 border border-blue-500/20"
+                                                >
+                                                    <span className="text-[9px] text-blue-400 uppercase">Speed</span>
+                                                    <span className="text-[11px] font-mono text-blue-400">+{speedBonus}</span>
+                                                </motion.div>
+                                            )}
+
+                                            {/* Combo bonus */}
+                                            {answerResult.comboBonus > 0 && (
+                                                <motion.div
+                                                    initial={{ opacity: 0, x: 10 }}
+                                                    animate={{ opacity: 1, x: 0 }}
+                                                    transition={{ delay: 0.2 }}
+                                                    className={`flex items-center gap-2 px-3 py-1 rounded-lg ${combo >= 5 ? 'bg-orange-500/10 border-orange-500/20' :
+                                                            'bg-yellow-500/10 border-yellow-500/20'
+                                                        } border`}
+                                                >
+                                                    <span className={`text-[9px] uppercase ${combo >= 5 ? 'text-orange-400' : 'text-yellow-400'
+                                                        }`}>
+                                                        Combo x{combo}
+                                                    </span>
+                                                    <span className={`text-[11px] font-mono ${combo >= 5 ? 'text-orange-400' : 'text-yellow-400'
+                                                        }`}>
+                                                        +{answerResult.comboBonus}
+                                                    </span>
+                                                </motion.div>
+                                            )}
+
+                                            {/* Total */}
+                                            <motion.div
+                                                initial={{ opacity: 0, x: 10 }}
+                                                animate={{ opacity: 1, x: 0 }}
+                                                transition={{ delay: 0.3 }}
+                                                className="flex items-center gap-2 px-3 py-1 rounded-lg bg-primary/10 border border-primary/20"
+                                            >
+                                                <span className="text-[9px] text-primary uppercase">Total</span>
+                                                <span className="text-[13px] font-mono font-bold text-primary">
+                                                    +{answerResult.gainedScore}
+                                                </span>
+                                            </motion.div>
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
+
+                                {/* Combo popup — appears center screen on big combo */}
+                                <AnimatePresence>
+                                    {showComboPopup && (
+                                        <motion.div
+                                            initial={{ opacity: 0, scale: 0.5, y: 20 }}
+                                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                                            exit={{ opacity: 0, scale: 1.5, y: -20 }}
+                                            className="absolute inset-0 flex items-center justify-center z-30 pointer-events-none"
+                                        >
+                                            <div className={`text-center px-8 py-6 rounded-3xl border backdrop-blur-xl ${combo >= 5 ? 'bg-orange-500/20 border-orange-500/40 shadow-[0_0_40px_rgba(249,115,22,0.4)]' :
+                                                    combo >= 3 ? 'bg-yellow-500/20 border-yellow-500/40 shadow-[0_0_40px_rgba(234,179,8,0.4)]' :
+                                                        'bg-primary/20 border-primary/40 shadow-[0_0_40px_rgba(80,200,120,0.4)]'
+                                                }`}>
+                                                <p className="text-[9px] uppercase tracking-[0.4em] text-white/50 mb-1">
+                                                    Combo Streak
+                                                </p>
+                                                <p className={`text-5xl font-black tracking-tighter ${combo >= 5 ? 'text-orange-400' :
+                                                        combo >= 3 ? 'text-yellow-400' :
+                                                            'text-primary'
+                                                    }`}>
+                                                    x{combo}
+                                                </p>
+                                                <p className={`text-[10px] uppercase tracking-widest mt-1 ${combo >= 5 ? 'text-orange-400' :
+                                                        combo >= 3 ? 'text-yellow-400' :
+                                                            'text-primary'
+                                                    }`}>
+                                                    {combo >= 5 ? '🔥 ON FIRE!' :
+                                                        combo >= 3 ? '⚡ HOT STREAK!' :
+                                                            '✨ NICE COMBO!'}
+                                                </p>
+                                            </div>
                                         </motion.div>
                                     )}
                                 </AnimatePresence>

@@ -34,9 +34,9 @@ async function connectDB() {
     try {
         console.log("🔌 Connecting to DB...");
         pool = mysql.createPool({
-            host: process.env.MYSQLHOST || "shortline.proxy.rlwy.net",
-            port: parseInt(process.env.MYSQLPORT) || 27837,
-            user: process.env.MYSQLUSER || "root",
+            host:     process.env.MYSQLHOST     || "shortline.proxy.rlwy.net",
+            port:     parseInt(process.env.MYSQLPORT) || 27837,
+            user:     process.env.MYSQLUSER     || "root",
             password: process.env.MYSQLPASSWORD || "UpecDTEIvcUcUGJzYPXlhdwjAQNJBNcQ",
             database: process.env.MYSQLDATABASE || "railway",
             waitForConnections: true,
@@ -51,13 +51,13 @@ async function connectDB() {
 
         await pool.execute(`
             CREATE TABLE IF NOT EXISTS leaderboard (
-                id INT AUTO_INCREMENT PRIMARY KEY,
+                id          INT AUTO_INCREMENT PRIMARY KEY,
                 player_name VARCHAR(255) NOT NULL,
-                score INT DEFAULT 0,
-                accuracy FLOAT DEFAULT 0,
-                avg_time FLOAT DEFAULT 0,
-                room_id VARCHAR(255) DEFAULT 'Global',
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                score       INT          DEFAULT 0,
+                accuracy    FLOAT        DEFAULT 0,
+                avg_time    FLOAT        DEFAULT 0,
+                room_id     VARCHAR(255) DEFAULT 'Global',
+                created_at  TIMESTAMP    DEFAULT CURRENT_TIMESTAMP
             )
         `);
         console.log("✅ Table leaderboard ready");
@@ -94,10 +94,10 @@ app.post('/api/save-score', async (req, res) => {
     try {
         const {
             playerName = "Anonymous",
-            score = 0,
-            accuracy = 0,
-            avgTime = 0,
-            roomId = "Global"
+            score      = 0,
+            accuracy   = 0,
+            avgTime    = 0,
+            roomId     = "Global"
         } = req.body;
 
         const [existing] = await pool.execute(
@@ -221,10 +221,10 @@ function scheduleNextQuestion(roomId, delay) {
     const room = activeRooms[roomId];
     if (!room) return;
 
-    // Cegah double schedule
+    // Prevent double schedule
     if (room.nextQuestionTimeout) return;
 
-    // Stop timer
+    // Stop timer interval
     if (room.timerInterval) {
         clearInterval(room.timerInterval);
         room.timerInterval = null;
@@ -240,7 +240,7 @@ function startGameTimer(roomId) {
     const room = activeRooms[roomId];
     if (!room) return;
 
-    // Bersihkan timer lama
+    // Clear any existing timer first
     if (room.timerInterval) {
         clearInterval(room.timerInterval);
         room.timerInterval = null;
@@ -276,8 +276,9 @@ function nextQuestion(roomId) {
 
     console.log(`📝 Room ${roomId}: soal ${room.currentQuestion + 1}/${room.questions.length}`);
 
+    // All questions done — emit game_over
     if (room.currentQuestion >= room.questions.length) {
-        console.log(`🏁 Room ${roomId}: GAME OVER - semua soal selesai`);
+        console.log(`🏁 Room ${roomId}: GAME OVER`);
         const finalPlayers = room.players.map(p => ({
             ...p,
             totalQuestions: room.questions.length,
@@ -292,10 +293,10 @@ function nextQuestion(roomId) {
 
     const q = room.questions[room.currentQuestion];
     io.to(roomId).emit('next_question', {
-        index: room.currentQuestion,
-        total: room.questions.length,
+        index:    room.currentQuestion,
+        total:    room.questions.length,
         question: q.question,
-        options: q.options,
+        options:  q.options,
     });
 
     room.answeredPlayers = {};
@@ -303,66 +304,76 @@ function nextQuestion(roomId) {
 }
 
 // =============================================
-// SOCKET.IO
+// SOCKET.IO — All handlers inside io.on('connection')
 // =============================================
 io.on('connection', (socket) => {
     console.log('New connection:', socket.id);
 
+    // ------------------------------------------
+    // CREATE ROOM — Host creates a new game room
+    // ------------------------------------------
     socket.on('create_room', (data) => {
         const { roomId, roomPass, hostName } = data;
 
         if (activeRooms[roomId]) {
-            console.log(`⚠️ Room ${roomId} already exists, skipping create`);
+            console.log(`⚠️ Room ${roomId} already exists, rejoining`);
             socket.join(roomId);
             io.to(roomId).emit('update_players', activeRooms[roomId].players);
             return;
         }
 
         activeRooms[roomId] = {
-            password: roomPass,
-            hostId: socket.id,
-            players: [{ id: socket.id, name: hostName, score: 0, correct: 0, totalTime: 0 }],
-            questions: [],
-            currentQuestion: -1,
-            answeredPlayers: {},
-            timeLeft: QUESTION_TIME,
-            timerInterval: null,
+            password:            roomPass,
+            hostId:              socket.id,
+            players:             [{ id: socket.id, name: hostName, score: 0, correct: 0, totalTime: 0, combo: 0 }],
+            questions:           [],
+            currentQuestion:     -1,
+            answeredPlayers:     {},
+            timeLeft:            QUESTION_TIME,
+            timerInterval:       null,
             nextQuestionTimeout: null,
         };
         socket.join(roomId);
         io.to(roomId).emit('update_players', activeRooms[roomId].players);
-        console.log(`Arena Created: ${roomId} by ${hostName}`);
+        console.log(`🏟️ Arena Created: ${roomId} by ${hostName}`);
     });
 
+    // ------------------------------------------
+    // JOIN ROOM — Player joins an existing room
+    // ------------------------------------------
     socket.on('join_room', (data, callback) => {
         const { roomId, roomPass, playerName } = data;
         const room = activeRooms[roomId];
-        if (!room) return callback({ status: "error", message: "Arena not found!" });
+        if (!room)                     return callback({ status: "error", message: "Arena not found!" });
         if (room.password !== roomPass) return callback({ status: "error", message: "Wrong password!" });
 
         const isAlreadyIn = room.players.find(p => p.id === socket.id);
         if (!isAlreadyIn) {
-            room.players.push({ id: socket.id, name: playerName, score: 0, correct: 0, totalTime: 0 });
+            room.players.push({ id: socket.id, name: playerName, score: 0, correct: 0, totalTime: 0, combo: 0 });
         }
         socket.join(roomId);
         io.to(roomId).emit('update_players', room.players);
         callback({ status: "success" });
     });
 
+    // ------------------------------------------
+    // START GAME — Host triggers game start
+    // ------------------------------------------
     socket.on('start_game', (data) => {
         const { roomId, category } = data;
         const room = activeRooms[roomId];
         if (!room) return;
 
-        const questions = shuffleArray(QUESTION_BANK[category] || []);
-        room.questions = questions;
+        const questions      = shuffleArray(QUESTION_BANK[category] || []);
+        room.questions       = questions;
         room.currentQuestion = -1;
         room.answeredPlayers = {};
-        room.category = category;
+        room.category        = category;
 
         io.to(roomId).emit('receive_start_game', category);
         console.log(`🚀 Arena ${roomId} launching: ${category} (${questions.length} soal)`);
 
+        // 3-2-1 countdown before first question
         let countdown = 3;
         io.to(roomId).emit('countdown', countdown);
 
@@ -372,54 +383,84 @@ io.on('connection', (socket) => {
                 io.to(roomId).emit('countdown', countdown);
             } else {
                 clearInterval(countdownInterval);
-                setTimeout(() => {
-                    nextQuestion(roomId);
-                }, 500);
+                setTimeout(() => nextQuestion(roomId), 500);
             }
         }, 1000);
     });
 
+    // ------------------------------------------
+    // SUBMIT ANSWER — Player submits their answer
+    // ------------------------------------------
     socket.on('submit_answer', (data) => {
         const { roomId, answerIndex, timeUsed } = data;
         const room = activeRooms[roomId];
         if (!room) return;
 
-        // Cegah jawab dua kali
+        // Prevent double submission
         if (room.answeredPlayers[socket.id]) return;
-
-        // Cegah jawab setelah soal selesai
-        if (room.nextQuestionTimeout) return;
+        if (room.nextQuestionTimeout)        return;
 
         room.answeredPlayers[socket.id] = true;
 
-        const q = room.questions[room.currentQuestion];
+        const q      = room.questions[room.currentQuestion];
         const player = room.players.find(p => p.id === socket.id);
         if (!player || !q) return;
 
         const isCorrect = answerIndex === q.answer;
         player.totalTime += timeUsed || 0;
 
-        let gainedScore = 0;
+        let gainedScore     = 0;
+        let comboBonus      = 0;
+        let speedBonus      = 0;
+        let newCombo        = 0;
+        let comboMultiplier = 1;
+
         if (isCorrect) {
-            const timeBonus = Math.max(0, QUESTION_TIME - (timeUsed || 0));
-            gainedScore = 100 + (timeBonus * 10);
-            player.score += gainedScore;
+            // Increment combo streak on correct answer
+            player.combo = (player.combo || 0) + 1;
+            newCombo     = player.combo;
+
+            // Combo multiplier tiers: x2 / x3 / x5
+            if      (player.combo >= 5) comboMultiplier = 2.0;
+            else if (player.combo >= 3) comboMultiplier = 1.5;
+            else if (player.combo >= 2) comboMultiplier = 1.2;
+
+            // Speed bonus tiers based on remaining time
+            const timeLeft = QUESTION_TIME - (timeUsed || 0);
+            if      (timeLeft >= 7) speedBonus = 50;
+            else if (timeLeft >= 4) speedBonus = 25;
+
+            // Apply multiplier to (base + speed bonus)
+            const baseScore = 100 + speedBonus;
+            gainedScore     = Math.round(baseScore * comboMultiplier);
+            comboBonus      = gainedScore - baseScore;
+
+            player.score   += gainedScore;
             player.correct += 1;
+        } else {
+            // Reset combo on wrong answer
+            player.combo = 0;
+            newCombo     = 0;
         }
 
+        // Send score breakdown to this player only
         socket.emit('answer_result', {
             isCorrect,
-            correctAnswer: q.answer,
+            correctAnswer:  q.answer,
             gainedScore,
+            speedBonus,
+            comboBonus,
+            comboMultiplier,
+            combo:      newCombo,
             totalScore: player.score,
         });
 
+        // Broadcast updated scoreboard to all players in room
         io.to(roomId).emit('update_players', room.players);
 
-        // Cek semua player sudah jawab
+        // If all players answered, advance to next question
         const totalAnswered = Object.keys(room.answeredPlayers).length;
-        const totalPlayers = room.players.length;
-
+        const totalPlayers  = room.players.length;
         console.log(`✏️ Room ${roomId}: ${totalAnswered}/${totalPlayers} answered`);
 
         if (totalAnswered >= totalPlayers) {
@@ -427,29 +468,46 @@ io.on('connection', (socket) => {
         }
     });
 
+    // ------------------------------------------
+    // CANCEL ROOM — Host manually ends the room
+    // ------------------------------------------
     socket.on('cancel_room', (roomId) => {
         const room = activeRooms[roomId];
-        if (room && room.timerInterval) clearInterval(room.timerInterval);
-        io.to(roomId).emit('room_terminated', "Host telah mengakhiri permainan.");
-        delete activeRooms[roomId];
-        console.log(`Room ${roomId} terminated by Host`);
+        if (room) {
+            clearRoomTimer(room);
+            io.to(roomId).emit('room_terminated', "Host telah mengakhiri permainan.");
+            delete activeRooms[roomId];
+            console.log(`🗑️ Room ${roomId} terminated by Host`);
+        }
     });
 
+    // ------------------------------------------
+    // DISCONNECTING — Clean up if host leaves
+    // ------------------------------------------
     socket.on('disconnecting', () => {
-        socket.rooms.forEach(room => {
-            if (activeRooms[room] && activeRooms[room].hostId === socket.id) {
-                if (activeRooms[room].timerInterval) clearInterval(activeRooms[room].timerInterval);
-                io.to(room).emit('room_terminated', "Host terputus. Ruangan dibubarkan.");
-                delete activeRooms[room];
+        socket.rooms.forEach(roomId => {
+            const room = activeRooms[roomId];
+            if (room && room.hostId === socket.id) {
+                clearRoomTimer(room);
+                io.to(roomId).emit('room_terminated', "Host terputus. Ruangan dibubarkan.");
+                delete activeRooms[roomId];
+                console.log(`🔌 Room ${roomId} closed — host disconnected`);
             }
         });
     });
 
+    // ------------------------------------------
+    // DISCONNECT — Log when any player disconnects
+    // ------------------------------------------
     socket.on('disconnect', () => {
         console.log('User Disconnected:', socket.id);
     });
-});
 
+}); // <-- END of io.on('connection') — ALL handlers must be above this line
+
+// =============================================
+// START SERVER
+// =============================================
 server.listen(PORT, () => {
     console.log(`🚀 WIPPY ENGINE READY ON PORT ${PORT}`);
 });
