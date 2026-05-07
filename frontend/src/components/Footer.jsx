@@ -51,7 +51,7 @@ export default function Footer() {
     const navigate = useNavigate();
 
     return (
-        <footer className="w-full relative overflow-hidden font-poppins">
+        <footer className="w-full relative overflow-hidden font-poppins bg-[#030014]">
 
             {/* Top divider line with glow */}
             <div className="relative h-[1px] w-full">
