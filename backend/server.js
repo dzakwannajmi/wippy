@@ -206,11 +206,41 @@ function shuffleArray(arr) {
 const activeRooms = {};
 const QUESTION_TIME = 10;
 
+function clearRoomTimer(room) {
+    if (room.timerInterval) {
+        clearInterval(room.timerInterval);
+        room.timerInterval = null;
+    }
+    if (room.nextQuestionTimeout) {
+        clearTimeout(room.nextQuestionTimeout);
+        room.nextQuestionTimeout = null;
+    }
+}
+
+function scheduleNextQuestion(roomId, delay) {
+    const room = activeRooms[roomId];
+    if (!room) return;
+
+    // Cegah double schedule
+    if (room.nextQuestionTimeout) return;
+
+    // Stop timer
+    if (room.timerInterval) {
+        clearInterval(room.timerInterval);
+        room.timerInterval = null;
+    }
+
+    room.nextQuestionTimeout = setTimeout(() => {
+        room.nextQuestionTimeout = null;
+        nextQuestion(roomId);
+    }, delay);
+}
+
 function startGameTimer(roomId) {
     const room = activeRooms[roomId];
     if (!room) return;
 
-    // ✅ Pastikan timer lama sudah bersih
+    // Bersihkan timer lama
     if (room.timerInterval) {
         clearInterval(room.timerInterval);
         room.timerInterval = null;
@@ -219,25 +249,19 @@ function startGameTimer(roomId) {
     room.timeLeft = QUESTION_TIME;
 
     room.timerInterval = setInterval(() => {
-        if (!activeRooms[roomId]) {
+        const r = activeRooms[roomId];
+        if (!r) {
             clearInterval(room.timerInterval);
             return;
         }
 
-        room.timeLeft--;
-        io.to(roomId).emit('timer_tick', room.timeLeft);
+        r.timeLeft--;
+        io.to(roomId).emit('timer_tick', r.timeLeft);
 
-        if (room.timeLeft <= 0) {
-            clearInterval(room.timerInterval);
-            room.timerInterval = null;
-            // ✅ Cegah double call
-            if (!room.waitingNextQuestion) {
-                room.waitingNextQuestion = true;
-                setTimeout(() => {
-                    room.waitingNextQuestion = false;
-                    nextQuestion(roomId);
-                }, 500);
-            }
+        if (r.timeLeft <= 0) {
+            clearInterval(r.timerInterval);
+            r.timerInterval = null;
+            scheduleNextQuestion(roomId, 500);
         }
     }, 1000);
 }
@@ -246,17 +270,15 @@ function nextQuestion(roomId) {
     const room = activeRooms[roomId];
     if (!room) return;
 
-    if (room.timerInterval) {
-        clearInterval(room.timerInterval);
-        room.timerInterval = null;
-    }
-
-    // ✅ Reset flag
-    room.waitingNextQuestion = false;
+    // Bersihkan semua timer
+    clearRoomTimer(room);
 
     room.currentQuestion++;
 
+    console.log(`📝 Room ${roomId}: Question ${room.currentQuestion + 1}/${room.questions.length}`);
+
     if (room.currentQuestion >= room.questions.length) {
+        console.log(`🏁 Room ${roomId}: Game Over`);
         const finalPlayers = room.players.map(p => ({
             ...p,
             totalQuestions: room.questions.length,
@@ -298,13 +320,13 @@ io.on('connection', (socket) => {
             answeredPlayers: {},
             timeLeft: QUESTION_TIME,
             timerInterval: null,
-            waitingNextQuestion:  false,
+            nextQuestionTimeout: null,  // ✅ ganti waitingNextQuestion
         };
         socket.join(roomId);
         io.to(roomId).emit('update_players', activeRooms[roomId].players);
         console.log(`Arena Created: ${roomId} by ${hostName}`);
     });
-
+    
     socket.on('join_room', (data, callback) => {
         const { roomId, roomPass, playerName } = data;
         const room = activeRooms[roomId];
@@ -355,7 +377,12 @@ io.on('connection', (socket) => {
         const room = activeRooms[roomId];
         if (!room) return;
 
+        // Cegah jawab dua kali
         if (room.answeredPlayers[socket.id]) return;
+
+        // Cegah jawab setelah soal selesai
+        if (room.nextQuestionTimeout) return;
+
         room.answeredPlayers[socket.id] = true;
 
         const q = room.questions[room.currentQuestion];
@@ -382,22 +409,14 @@ io.on('connection', (socket) => {
 
         io.to(roomId).emit('update_players', room.players);
 
-        const totalPlayers = room.players.length;
+        // Cek semua player sudah jawab
         const totalAnswered = Object.keys(room.answeredPlayers).length;
+        const totalPlayers = room.players.length;
+
+        console.log(`✏️ Room ${roomId}: ${totalAnswered}/${totalPlayers} answered`);
+
         if (totalAnswered >= totalPlayers) {
-            // ✅ Stop timer dulu sebelum lanjut soal
-            if (room.timerInterval) {
-                clearInterval(room.timerInterval);
-                room.timerInterval = null;
-            }
-            // ✅ Cegah double call dengan flag
-            if (!room.waitingNextQuestion) {
-                room.waitingNextQuestion = true;
-                setTimeout(() => {
-                    room.waitingNextQuestion = false;
-                    nextQuestion(roomId);
-                }, 1500);
-            }
+            scheduleNextQuestion(roomId, 1500);
         }
     });
 
