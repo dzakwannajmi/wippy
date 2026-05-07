@@ -1,92 +1,130 @@
-# 🟢 Wippy Arena: Emerald Edition
+# Wippy Arena · Emerald Edition
 
-<img width="1920" height="1080" alt="Screenshot 2026-03-24 212130" src="https://github.com/user-attachments/assets/dcde2613-dc4d-49e0-b690-50a757d14297" />
+<img width="1920" height="1080" alt="Wippy Arena Screenshot" src="https://github.com/user-attachments/assets/dcde2613-dc4d-49e0-b690-50a757d14297" />
+
+<div align="center">
+
+[![Live Demo](https://img.shields.io/badge/LIVE_DEMO-wippy--rosy.vercel.app-50C878?style=for-the-badge&logoColor=white)](https://wippy-rosy.vercel.app)
+[![Backend](https://img.shields.io/badge/BACKEND-Railway-50C878?style=for-the-badge)](https://wippy-backend-production.up.railway.app)
+[![License](https://img.shields.io/badge/LICENSE-MIT-white?style=for-the-badge)](./LICENSE)
 
 **A High-Fidelity Real-Time Competitive Programming Quiz Platform**
 
-Wippy Arena is a modern, gamified web application designed for developers to challenge their skills in **PHP, JavaScript, and React**. Featuring a futuristic *Cyber-Emerald* aesthetic, it delivers real-time synchronization, fluid animations, and a global leaderboard.
+</div>
 
 ---
 
-## 🚀 Key Features
+## Overview
 
-- ⚔️ **Real-Time Duel**  
-  Compete with other players in synchronized quiz sessions using Socket.io.
-
-- 🧠 **Neural HUD Interface**  
-  High-performance UI powered by Framer Motion & GSAP.
-
-- 🧩 **Tech-Specific Arenas**  
-  Dedicated arenas for PHP, JavaScript, and React with authentic branding.
-
-- 🏆 **Global Hall of Fame**  
-  Persistent scoring system integrated with MySQL via PHP.
-
-- 📊 **Performance Analytics**  
-  Detailed performance insights including accuracy and response efficiency.
+Wippy Arena is a modern, gamified web application where developers battle their knowledge in **PHP, JavaScript, and React**. Built on a futuristic *Cyber-Emerald* aesthetic, the platform delivers true real-time synchronization via WebSockets, a server-validated combo scoring system, and fluid full-screen animations — all hosted on a cloud-native stack with zero PHP.
 
 ---
 
-## 🛠️ Tech Stack
+## Features
 
-**Frontend**
-- React 19
-- Vite 6
+### ⚔️ Real-Time Quiz Battle
+- Synchronized multiplayer sessions via Socket.io
+- Server-side timer — every player sees the same countdown
+- All answers and scores validated server-side, no client cheating possible
+- Live scoreboard updates after every answer
 
-**Styling**
-- Tailwind CSS v4
+### 🔥 Combo & Speed Scoring
+- **Speed Bonus** — answer in under 3s for +50 pts, under 6s for +25 pts
+- **Combo Multiplier** — chain correct answers to multiply your score
+  - ×1.2 at 2 streak · ×1.5 at 3 streak · ×2.0 at 5+ streak
+- Full-screen **TikTok-style fire animation** triggers at every 5-combo milestone
+- Score breakdown popup (Base + Speed + Combo) shown on each correct answer
 
-**Animations**
-- Framer Motion
-- GSAP
+### 🏆 Podium & Leaderboard
+- Animated podium screen revealing 3rd → 2nd → 1st place
+- Global Hall of Fame backed by MySQL on Aiven Cloud
+- Accuracy and average response time tracked per session
 
-**Icons**
-- Lucide React
-- React Icons
+### 🎮 Game Experience
+- Animated tutorial overlay on first game start (4 slides, auto-advancing)
+- 3-2-1 countdown before questions begin
+- Category selector: PHP · JavaScript · React (20 shuffled questions each)
+- Room system with ID + password — share with friends to battle
 
-**Real-Time Engine**
-- Socket.io-client
-
-**Backend**
-- Node.js (Socket Server)
-- PHP 8 (API Layer)
-
-**Database**
-- MySQL
+### 🎨 UI & Animation
+- Cyber-Emerald dark theme with PixelBlast animated background
+- Framer Motion scroll-triggered sections on landing page
+- Magic Bento grid, CardSwap stack, ScrollFloat text animations
+- Fully responsive — desktop and mobile
 
 ---
 
-## 📂 Project Structure
+## Tech Stack
+
+| Layer | Technology |
+|-------|-----------|
+| **Frontend** | React 19 + Vite 7 |
+| **Styling** | Tailwind CSS v4 |
+| **Animations** | Framer Motion · GSAP |
+| **Icons** | React Icons |
+| **Real-Time** | Socket.io 4 |
+| **Backend** | Node.js + Express 5 |
+| **Database** | MySQL (Aiven Cloud) |
+| **Frontend Host** | Vercel |
+| **Backend Host** | Railway |
+
+---
+
+## Project Structure
 
 ```
 wippy/
-├── backend/                
-│   ├── db.php              
-│   ├── server.js           
-│   ├── save_score.php      
-│   ├── get_leaderboard.php 
-│   ├── test_db.php         
-│   └── .env                
-├── frontend/               
-│   ├── public/             
+├── backend/
+│   ├── server.js           # Express + Socket.io + Game logic + API routes
+│   └── package.json
+├── frontend/
+│   ├── public/
 │   └── src/
-│       ├── components/     
-│       ├── pages/          
-│       ├── App.jsx         
-│       ├── index.css       
-│       └── main.jsx        
-├── question.js             
-├── .gitignore              
-├── LICENSE                 
-├── README.md               
-└── vite.config.js          
+│       ├── components/
+│       │   ├── FireStreakOverlay.jsx   # Full-screen fire animation
+│       │   ├── GameTutorial.jsx        # Pre-game tutorial overlay
+│       │   ├── Footer.jsx              # Site footer
+│       │   ├── WaitingArena.jsx        # Lobby waiting room
+│       │   ├── MagicBento.jsx          # Feature grid
+│       │   ├── PixelBlast.jsx          # Background animation
+│       │   └── ...
+│       ├── pages/
+│       │   ├── Home.jsx                # Landing page
+│       │   ├── Entry.jsx               # Create / join room
+│       │   ├── QuizRoom.jsx            # Main game screen
+│       │   ├── Podium.jsx              # End-game podium
+│       │   └── Result.jsx              # Score submission
+│       ├── App.jsx
+│       └── main.jsx
+├── .npmrc
+└── README.md
 ```
 
 ---
 
-## ⚙️ Installation & Setup
+## Scoring Formula
 
-### 1. Clone Repository
+```
+timeLeft  = 10 - secondsUsed
+
+speedBonus = timeLeft >= 7 ? 50 : timeLeft >= 4 ? 25 : 0
+baseScore  = 100 + speedBonus
+
+multiplier = combo >= 5 ? 2.0
+           : combo >= 3 ? 1.5
+           : combo >= 2 ? 1.2
+           : 1.0
+
+finalScore = round(baseScore × multiplier)
+```
+
+> Example: answer in 2s with a 5-combo streak → (100 + 50) × 2.0 = **300 pts**
+
+---
+
+## Local Development
+
+### 1. Clone
 
 ```bash
 git clone https://github.com/dzakwannajmi/wippy.git
@@ -97,55 +135,67 @@ cd wippy
 
 ```bash
 # Frontend
-cd frontend
-npm install
+cd frontend && npm install
 
 # Backend
-cd ../backend
-npm install
+cd ../backend && npm install
 ```
 
-### 3. Environment Configuration
+### 3. Environment Variables
 
-Create a `.env` file inside the `frontend` folder:
+Create `frontend/.env`:
 
 ```env
-VITE_SOCKET_URL=http://localhost:3001
-VITE_API_URL=http://localhost:8000
+VITE_SOCKET_URL=http://localhost:8080
+VITE_API_URL=http://localhost:8080
 ```
 
-### 4. Initialize System
+Create `backend/.env`:
 
-Run three services in separate terminals:
+```env
+APP_PORT=8080
+MYSQLHOST=your_host
+MYSQLPORT=your_port
+MYSQLUSER=your_user
+MYSQLPASSWORD=your_password
+MYSQLDATABASE=your_database
+FRONTEND_URL=http://localhost:5173
+```
 
-#### 🖥️ Terminal 1: Frontend
+### 4. Run
+
 ```bash
-cd frontend
-npm run dev
+# Terminal 1 — Frontend
+cd frontend && npm run dev
+
+# Terminal 2 — Backend
+cd backend && node server.js
 ```
 
-#### ⚡ Terminal 2: Socket Server
-```bash
-cd backend
-node server.js
-```
-
-#### 🗄️ Terminal 3: PHP API Server
-```bash
-cd backend
-php -S localhost:8000
-```
+App runs at `http://localhost:5173`
 
 ---
 
-## 🛡️ License
+## Deployment
 
-Distributed under the **MIT License**.  
-See the `LICENSE` file for more information.
+| Service | Platform | Notes |
+|---------|----------|-------|
+| Frontend | [Vercel](https://vercel.com) | Auto-deploy on `git push` |
+| Backend | [Railway](https://railway.app) | `railway up` from `/backend` |
+| Database | [Aiven MySQL](https://aiven.io) | Free tier, keep-alive monthly |
 
 ---
 
-## 👨‍💻 Author
+## License
 
-**Dzakwan Najmi**  
-*"Building the future of competitive learning, one node at a time."*
+Distributed under the **MIT License** — see [`LICENSE`](./LICENSE) for details.
+
+---
+
+## Author
+
+**Dzakwan Najmi**
+
+> *"Building the future of competitive learning, one node at a time."*
+
+[![GitHub](https://img.shields.io/badge/GitHub-dzakwannajmi-50C878?style=flat-square&logo=github)](https://github.com/dzakwannajmi)
