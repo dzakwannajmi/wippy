@@ -85,30 +85,6 @@ export default function Footer() {
                             The battlefield where knowledge becomes power. 
                             Compete in real-time quiz battles with players worldwide.
                         </p>
-
-                        {/* CTA Button */}
-                        <motion.button
-                            whileHover={{
-                                scale: 1.03,
-                                backgroundColor: "#50C878",
-                                color: "#030014",
-                                boxShadow: "0 0 30px rgba(80,200,120,0.4)"
-                            }}
-                            whileTap={{ scale: 0.97 }}
-                            onClick={() => navigate("/entry")}
-                            className="self-start flex items-center gap-3 px-7 py-3 border border-primary/40 text-primary text-[10px] tracking-[0.4em] uppercase transition-all duration-200 rounded-none"
-                        >
-                            <IoPlay size={13} />
-                            ENTER ARENA
-                        </motion.button>
-
-                        {/* Live status pill */}
-                        <div className="flex items-center gap-2 self-start">
-                            <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse shadow-[0_0_8px_#50C878]" />
-                            <span className="text-[9px] text-primary/40 uppercase tracking-[0.4em]">
-                                Servers Online
-                            </span>
-                        </div>
                     </div>
 
                     {/* Nav columns */}
@@ -170,31 +146,6 @@ export default function Footer() {
                             ))}
                         </div>
                     </div>
-                </div>
-
-                {/* =============================================
-                    STATS BAR — Quick numbers
-                ============================================= */}
-                <div className="grid grid-cols-3 gap-0 mb-16 border border-white/5 rounded-2xl overflow-hidden">
-                    {[
-                        { value: "60+",   label: "Questions"  },
-                        { value: "3",     label: "Categories" },
-                        { value: "10s",   label: "Per Round"  },
-                    ].map((stat, i) => (
-                        <div
-                            key={i}
-                            className={`flex flex-col items-center justify-center py-6 bg-white/[0.02] ${
-                                i < 2 ? "border-r border-white/5" : ""
-                            }`}
-                        >
-                            <span className="text-2xl font-thin text-primary tracking-tighter">
-                                {stat.value}
-                            </span>
-                            <span className="text-[9px] text-slate-600 uppercase tracking-[0.3em] mt-1">
-                                {stat.label}
-                            </span>
-                        </div>
-                    ))}
                 </div>
 
                 {/* =============================================
