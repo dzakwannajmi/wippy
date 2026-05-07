@@ -29,16 +29,15 @@ export default function Podium() {
 
     // Sort players by score
     const sorted = [...players].sort((a, b) => (b.score || 0) - (a.score || 0));
-    const top3    = sorted.slice(0, 3);
-    const rest    = sorted.slice(3);
-    const me      = sorted.find(p => p.id === mySocketId);
-
-    const myRank  = sorted.findIndex(p => p.id === mySocketId) + 1;
+    const top3 = sorted.slice(0, 3);
+    const rest = sorted.slice(3);
+    const me = sorted.find(p => p.name === playerName) || sorted[0];
+    const myRank = sorted.findIndex(p => p.name === playerName) + 1 || 1;
     const myScore = me?.score || 0;
     const myCorrect = me?.correct || 0;
-    const totalQ  = players[0]?.totalQuestions || 0;
+    const totalQ = players[0]?.totalQuestions || 0;
     const accuracy = totalQ > 0 ? (myCorrect / totalQ) * 100 : 0;
-    const avgTime  = totalQ > 0 ? (me?.totalTime || 0) / totalQ : 0;
+    const avgTime = totalQ > 0 ? (me?.totalTime || 0) / totalQ : 0;
 
     // Animasi masuk bertahap
     useEffect(() => {
@@ -49,16 +48,16 @@ export default function Podium() {
     }, []);
 
     const podiumConfig = [
-        { rank: 1, height: "h-40",  color: "from-yellow-500/30 to-yellow-500/5",  border: "border-yellow-500/50",  shadow: "shadow-[0_0_30px_rgba(234,179,8,0.3)]",  icon: <IoTrophyOutline size={28} className="text-yellow-400" />,  label: "text-yellow-400", number: "text-yellow-500" },
-        { rank: 2, height: "h-28",  color: "from-slate-400/30 to-slate-400/5",    border: "border-slate-400/50",   shadow: "shadow-[0_0_20px_rgba(148,163,184,0.2)]", icon: <IoMedalOutline size={24} className="text-slate-300" />,    label: "text-slate-300",  number: "text-slate-400" },
-        { rank: 3, height: "h-20",  color: "from-orange-500/30 to-orange-500/5",  border: "border-orange-500/50",  shadow: "shadow-[0_0_20px_rgba(249,115,22,0.2)]",  icon: <IoRibbonOutline size={22} className="text-orange-400" />,  label: "text-orange-400", number: "text-orange-500" },
+        { rank: 1, height: "h-40", color: "from-yellow-500/30 to-yellow-500/5", border: "border-yellow-500/50", shadow: "shadow-[0_0_30px_rgba(234,179,8,0.3)]", icon: <IoTrophyOutline size={28} className="text-yellow-400" />, label: "text-yellow-400", number: "text-yellow-500" },
+        { rank: 2, height: "h-28", color: "from-slate-400/30 to-slate-400/5", border: "border-slate-400/50", shadow: "shadow-[0_0_20px_rgba(148,163,184,0.2)]", icon: <IoMedalOutline size={24} className="text-slate-300" />, label: "text-slate-300", number: "text-slate-400" },
+        { rank: 3, height: "h-20", color: "from-orange-500/30 to-orange-500/5", border: "border-orange-500/50", shadow: "shadow-[0_0_20px_rgba(249,115,22,0.2)]", icon: <IoRibbonOutline size={22} className="text-orange-400" />, label: "text-orange-400", number: "text-orange-500" },
     ];
 
     // Urutan animasi: 3rd → 2nd → 1st
     const podiumOrder = [
-        top3[2] ? { player: top3[2], config: podiumConfig[2], delay: 0.3 }   : null,
-        top3[1] ? { player: top3[1], config: podiumConfig[1], delay: 0.6 }   : null,
-        top3[0] ? { player: top3[0], config: podiumConfig[0], delay: 1.0 }   : null,
+        top3[2] ? { player: top3[2], config: podiumConfig[2], delay: 0.3 } : null,
+        top3[1] ? { player: top3[1], config: podiumConfig[1], delay: 0.6 } : null,
+        top3[0] ? { player: top3[0], config: podiumConfig[0], delay: 1.0 } : null,
     ].filter(Boolean);
 
     const getRankEmoji = (rank) => {
@@ -127,9 +126,7 @@ export default function Podium() {
                                         {/* Nama player */}
                                         <p className={`text-[11px] font-medium uppercase tracking-wider ${player.id === mySocketId ? 'text-primary' : 'text-white/90'}`}>
                                             {player.name}
-                                            {player.id === mySocketId && (
-                                                <span className="text-primary/60"> (You)</span>
-                                            )}
+                                            {player.name === playerName && <span className="text-primary/60"> (You)</span>}
                                         </p>
 
                                         {/* Score */}
@@ -170,9 +167,7 @@ export default function Podium() {
                             {rest.map((player, i) => (
                                 <div
                                     key={player.id}
-                                    className={`flex items-center gap-4 px-5 py-3 rounded-2xl border transition-all ${player.id === mySocketId
-                                        ? 'bg-primary/10 border-primary/20'
-                                        : 'bg-white/[0.02] border-white/5'
+                                    className={`flex items-center gap-4 px-5 py-3 rounded-2xl border transition-all ${player.name === playerName ? 'bg-primary/10 border-primary/20' : 'bg-white/[0.02] border-white/5'
                                         }`}
                                 >
                                     <span className="text-[11px] font-mono text-slate-600 w-6">

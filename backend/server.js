@@ -270,15 +270,14 @@ function nextQuestion(roomId) {
     const room = activeRooms[roomId];
     if (!room) return;
 
-    // Bersihkan semua timer
     clearRoomTimer(room);
 
     room.currentQuestion++;
 
-    console.log(`📝 Room ${roomId}: Question ${room.currentQuestion + 1}/${room.questions.length}`);
+    console.log(`📝 Room ${roomId}: soal ${room.currentQuestion + 1}/${room.questions.length}`);
 
     if (room.currentQuestion >= room.questions.length) {
-        console.log(`🏁 Room ${roomId}: Game Over`);
+        console.log(`🏁 Room ${roomId}: GAME OVER - semua soal selesai`);
         const finalPlayers = room.players.map(p => ({
             ...p,
             totalQuestions: room.questions.length,
@@ -326,7 +325,7 @@ io.on('connection', (socket) => {
         io.to(roomId).emit('update_players', activeRooms[roomId].players);
         console.log(`Arena Created: ${roomId} by ${hostName}`);
     });
-    
+
     socket.on('join_room', (data, callback) => {
         const { roomId, roomPass, playerName } = data;
         const room = activeRooms[roomId];

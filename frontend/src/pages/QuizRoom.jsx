@@ -106,11 +106,11 @@ export default function QuizRoom() {
             setTimeout(() => {
                 navigate("/podium", {
                     state: {
-                        players:    data.players,
+                        players: data.players,
                         mySocketId: socket.id,
                         playerName,
                         roomId,
-                        category:   data.category,
+                        category: data.category,
                     }
                 });
             }, 1500);
@@ -163,10 +163,10 @@ export default function QuizRoom() {
 
     const getTechIcon = (tech, size = 32) => {
         switch (tech) {
-            case 'PHP':        return <SiPhp size={size} className="text-[#777BB4]" />;
+            case 'PHP': return <SiPhp size={size} className="text-[#777BB4]" />;
             case 'JAVASCRIPT': return <SiJavascript size={size} className="text-[#F7DF1E]" />;
-            case 'REACT':      return <SiReact size={size} className="text-[#61DAFB]" />;
-            default:           return null;
+            case 'REACT': return <SiReact size={size} className="text-[#61DAFB]" />;
+            default: return null;
         }
     };
 
