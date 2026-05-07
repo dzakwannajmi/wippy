@@ -310,6 +310,14 @@ io.on('connection', (socket) => {
 
     socket.on('create_room', (data) => {
         const { roomId, roomPass, hostName } = data;
+
+        if (activeRooms[roomId]) {
+            console.log(`⚠️ Room ${roomId} already exists, skipping create`);
+            socket.join(roomId);
+            io.to(roomId).emit('update_players', activeRooms[roomId].players);
+            return;
+        }
+
         activeRooms[roomId] = {
             password: roomPass,
             hostId: socket.id,
@@ -319,7 +327,7 @@ io.on('connection', (socket) => {
             answeredPlayers: {},
             timeLeft: QUESTION_TIME,
             timerInterval: null,
-            nextQuestionTimeout: null,  // ✅ ganti waitingNextQuestion
+            nextQuestionTimeout: null,
         };
         socket.join(roomId);
         io.to(roomId).emit('update_players', activeRooms[roomId].players);

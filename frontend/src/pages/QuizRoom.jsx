@@ -54,30 +54,29 @@ export default function QuizRoom() {
     }, [socket]);
 
     useEffect(() => {
-        if (isHost) {
-            socket.emit("create_room", { roomId, roomPass, hostName: playerName });
-        } else {
-            socket.emit("join_room", { roomId, roomPass, playerName }, (res) => {
-                if (res?.status === "error") {
-                    alert(res.message);
-                    navigate("/");
-                }
-            });
+        // ✅ Flag untuk cegah double emit
+        let hasJoined = false;
+
+        if (!hasJoined) {
+            hasJoined = true;
+            if (isHost) {
+                socket.emit("create_room", { roomId, roomPass, hostName: playerName });
+            } else {
+                socket.emit("join_room", { roomId, roomPass, playerName }, (res) => {
+                    if (res?.status === "error") {
+                        alert(res.message);
+                        navigate("/");
+                    }
+                });
+            }
         }
 
-        socket.on("update_players", (playersList) => {
-            setPlayers(playersList);
-        });
-
-        socket.on("receive_start_game", (category) => {
-            setSelectedCategory(category);
-        });
-
+        socket.on("update_players", (playersList) => setPlayers(playersList));
+        socket.on("receive_start_game", (category) => setSelectedCategory(category));
         socket.on("countdown", (count) => {
             setGamePhase("countdown");
             setCountdown(count);
         });
-
         socket.on("next_question", (data) => {
             setCurrentQuestion(data);
             setQuestionIndex(data.index);
@@ -87,20 +86,13 @@ export default function QuizRoom() {
             setHasAnswered(false);
             setGamePhase("playing");
         });
-
-        socket.on("timer_tick", (time) => {
-            setTimeLeft(time);
-        });
-
+        socket.on("timer_tick", (time) => setTimeLeft(time));
         socket.on("answer_result", (result) => {
             setAnswerResult(result);
             setMyScore(result.totalScore);
             setGamePhase("answer_reveal");
-            setTimeout(() => {
-                setGamePhase("playing");
-            }, 1500);
+            setTimeout(() => setGamePhase("playing"), 1500);
         });
-
         socket.on("game_over", (data) => {
             setGamePhase("game_over");
             setTimeout(() => {
@@ -115,7 +107,6 @@ export default function QuizRoom() {
                 });
             }, 1500);
         });
-
         socket.on("room_terminated", (msg) => {
             alert(msg);
             navigate("/");
@@ -131,7 +122,7 @@ export default function QuizRoom() {
             socket.off("game_over");
             socket.off("room_terminated");
         };
-    }, [roomId, playerName, isHost, roomPass, navigate, socket, totalQuestions]);
+    }, []);
 
     const handleAnswer = useCallback((index) => {
         if (hasAnswered || gamePhase !== "playing") return;
