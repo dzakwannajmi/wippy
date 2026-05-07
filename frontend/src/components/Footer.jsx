@@ -162,14 +162,6 @@ export default function Footer() {
                     <p className="text-[9px] text-primary/30 uppercase tracking-[0.5em] font-light">
                         Knowledge is the ultimate weapon
                     </p>
-
-                    {/* Right: version badge */}
-                    <div className="flex items-center gap-2 px-3 py-1 rounded-full border border-white/5 bg-white/[0.02]">
-                        <div className="w-1 h-1 rounded-full bg-primary/50" />
-                        <span className="text-[8px] text-slate-700 uppercase tracking-[0.3em]">
-                            v2.0 · Emerald Stack
-                        </span>
-                    </div>
                 </div>
             </div>
         </footer>

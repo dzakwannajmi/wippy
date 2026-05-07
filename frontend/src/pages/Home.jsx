@@ -6,6 +6,7 @@ import LogoLoop from "../components/LogoLoop";
 import MagicBento from "../components/MagicBento";
 import ScrollFloat from "../components/ScrollFloat";
 import Footer from "../components/Footer";
+import GameTutorial from "../components/GameTutorial";
 
 // --- REACT ICONS ---
 import {

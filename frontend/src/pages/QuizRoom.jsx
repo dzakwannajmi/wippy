@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import WaitingArena from "../components/WaitingArena";
 import PixelBlast from "../components/PixelBlast";
 import FireStreakOverlay from "../components/FireStreakOverlay";
+import GameTutorial from "../components/GameTutorial";
 
 import { SiPhp, SiJavascript, SiReact } from 'react-icons/si';
 import {
@@ -21,6 +22,8 @@ import {
 const CATEGORIES = ["PHP", "JAVASCRIPT", "REACT"];
 
 export default function QuizRoom() {
+    const [showTutorial, setShowTutorial] = useState(false);
+
     const navigate = useNavigate();
     const location = useLocation();
 
@@ -32,30 +35,30 @@ export default function QuizRoom() {
 
     const { playerName, isHost, roomId, roomPass } = location.state || {
         playerName: "Guest_Operator",
-        isHost:     false,
-        roomId:     "------",
-        roomPass:   "0"
+        isHost: false,
+        roomId: "------",
+        roomPass: "0"
     };
 
     // =============================================
     // STATE — All hooks must be inside the component
     // =============================================
-    const [gamePhase,        setGamePhase]        = useState("waiting");
-    const [players,          setPlayers]          = useState([]);
+    const [gamePhase, setGamePhase] = useState("waiting");
+    const [players, setPlayers] = useState([]);
     const [selectedCategory, setSelectedCategory] = useState(null);
-    const [currentQuestion,  setCurrentQuestion]  = useState(null);
-    const [questionIndex,    setQuestionIndex]    = useState(0);
-    const [totalQuestions,   setTotalQuestions]   = useState(0);
-    const [timeLeft,         setTimeLeft]         = useState(10);
-    const [countdown,        setCountdown]        = useState(null);
-    const [selectedAnswer,   setSelectedAnswer]   = useState(null);
-    const [answerResult,     setAnswerResult]     = useState(null);
-    const [hasAnswered,      setHasAnswered]      = useState(false);
-    const [combo,            setCombo]            = useState(0);
-    const [comboMultiplier,  setComboMultiplier]  = useState(1);
-    const [speedBonus,       setSpeedBonus]       = useState(0);
-    const [showComboPopup,   setShowComboPopup]   = useState(false);
-    const [myScore,          setMyScore]          = useState(0);
+    const [currentQuestion, setCurrentQuestion] = useState(null);
+    const [questionIndex, setQuestionIndex] = useState(0);
+    const [totalQuestions, setTotalQuestions] = useState(0);
+    const [timeLeft, setTimeLeft] = useState(10);
+    const [countdown, setCountdown] = useState(null);
+    const [selectedAnswer, setSelectedAnswer] = useState(null);
+    const [answerResult, setAnswerResult] = useState(null);
+    const [hasAnswered, setHasAnswered] = useState(false);
+    const [combo, setCombo] = useState(0);
+    const [comboMultiplier, setComboMultiplier] = useState(1);
+    const [speedBonus, setSpeedBonus] = useState(0);
+    const [showComboPopup, setShowComboPopup] = useState(false);
+    const [myScore, setMyScore] = useState(0);
 
     // ✅ FIX 1: useState must be inside the component — moved here from module level
     const [showFireOverlay, setShowFireOverlay] = useState(false);
@@ -87,8 +90,11 @@ export default function QuizRoom() {
             }
         }
 
-        socket.on("update_players",    (playersList) => setPlayers(playersList));
-        socket.on("receive_start_game", (category)   => setSelectedCategory(category));
+        socket.on("update_players", (playersList) => setPlayers(playersList));
+        socket.on("receive_start_game", (category) => {
+            setSelectedCategory(category);
+            setShowTutorial(true);
+        });
 
         socket.on("countdown", (count) => {
             setGamePhase("countdown");
@@ -137,11 +143,11 @@ export default function QuizRoom() {
             setTimeout(() => {
                 navigate("/podium", {
                     state: {
-                        players:    data.players,
+                        players: data.players,
                         mySocketId: socket.id,
                         playerName,
                         roomId,
-                        category:   data.category,
+                        category: data.category,
                     }
                 });
             }, 1500);
@@ -193,15 +199,15 @@ export default function QuizRoom() {
     // Returns tech stack icon component by category name
     const getTechIcon = (tech, size = 32) => {
         switch (tech) {
-            case 'PHP':        return <SiPhp        size={size} className="text-[#777BB4]" />;
-            case 'JAVASCRIPT': return <SiJavascript  size={size} className="text-[#F7DF1E]" />;
-            case 'REACT':      return <SiReact       size={size} className="text-[#61DAFB]" />;
-            default:           return null;
+            case 'PHP': return <SiPhp size={size} className="text-[#777BB4]" />;
+            case 'JAVASCRIPT': return <SiJavascript size={size} className="text-[#F7DF1E]" />;
+            case 'REACT': return <SiReact size={size} className="text-[#61DAFB]" />;
+            default: return null;
         }
     };
 
-    const progress   = totalQuestions > 0 ? ((questionIndex + 1) / totalQuestions) * 100 : 0;
-    const isWaiting  = gamePhase === "waiting";
+    const progress = totalQuestions > 0 ? ((questionIndex + 1) / totalQuestions) * 100 : 0;
+    const isWaiting = gamePhase === "waiting";
 
     // =============================================
     // RENDER: COUNTDOWN SCREEN
@@ -328,25 +334,23 @@ export default function QuizRoom() {
                                 <motion.div
                                     initial={{ opacity: 0, scale: 0.8 }}
                                     animate={{ opacity: 1, scale: 1 }}
-                                    className={`flex items-center justify-between px-4 py-2 rounded-xl border ${
-                                        combo >= 5 ? 'bg-orange-500/20 border-orange-500/40' :
+                                    className={`flex items-center justify-between px-4 py-2 rounded-xl border ${combo >= 5 ? 'bg-orange-500/20 border-orange-500/40' :
                                         combo >= 3 ? 'bg-yellow-500/20 border-yellow-500/40' :
-                                                     'bg-primary/10 border-primary/20'
-                                    }`}
+                                            'bg-primary/10 border-primary/20'
+                                        }`}
                                 >
                                     <span className="text-[9px] uppercase tracking-widest text-slate-400">Combo</span>
                                     <div className="flex items-center gap-2">
-                                        <span className={`text-sm font-bold ${
-                                            combo >= 5 ? 'text-orange-400' :
+                                        <span className={`text-sm font-bold ${combo >= 5 ? 'text-orange-400' :
                                             combo >= 3 ? 'text-yellow-400' :
-                                                         'text-primary'
-                                        }`}>
+                                                'text-primary'
+                                            }`}>
                                             x{combo}
                                         </span>
                                         <span className="text-[8px] font-mono text-white/40">
                                             {combo >= 5 ? '🔥 ON FIRE' :
-                                             combo >= 3 ? '⚡ HOT'     :
-                                                          '✨ STREAK'}
+                                                combo >= 3 ? '⚡ HOT' :
+                                                    '✨ STREAK'}
                                         </span>
                                     </div>
                                 </motion.div>
@@ -356,11 +360,10 @@ export default function QuizRoom() {
                             {comboMultiplier > 1 && (
                                 <div className="flex justify-between items-center text-[10px]">
                                     <span className="text-slate-500 uppercase tracking-widest">Multiplier</span>
-                                    <span className={`font-mono font-bold ${
-                                        comboMultiplier >= 2   ? 'text-orange-400' :
+                                    <span className={`font-mono font-bold ${comboMultiplier >= 2 ? 'text-orange-400' :
                                         comboMultiplier >= 1.5 ? 'text-yellow-400' :
-                                                                  'text-primary'
-                                    }`}>
+                                            'text-primary'
+                                        }`}>
                                         {comboMultiplier}x
                                     </span>
                                 </div>
@@ -379,11 +382,10 @@ export default function QuizRoom() {
                                 .map((p, i) => (
                                     <div
                                         key={p.id}
-                                        className={`flex justify-between items-center px-4 py-3 rounded-2xl border transition-all ${
-                                            p.id === socket.id
-                                                ? 'bg-primary/10 border-primary/20'
-                                                : 'bg-white/[0.02] border-white/5 hover:border-primary/20'
-                                        }`}
+                                        className={`flex justify-between items-center px-4 py-3 rounded-2xl border transition-all ${p.id === socket.id
+                                            ? 'bg-primary/10 border-primary/20'
+                                            : 'bg-white/[0.02] border-white/5 hover:border-primary/20'
+                                            }`}
                                     >
                                         <span className="text-[10px] font-mono text-slate-600">0{i + 1}</span>
                                         <span className="text-[10px] font-normal uppercase flex-1 ml-4 truncate text-slate-300">
@@ -416,11 +418,10 @@ export default function QuizRoom() {
                                                 whileHover={{ scale: 1.05 }}
                                                 whileTap={{ scale: 0.95 }}
                                                 onClick={() => setSelectedCategory(tech)}
-                                                className={`cursor-pointer p-6 rounded-[2rem] border transition-all flex flex-col items-center gap-3 ${
-                                                    selectedCategory === tech
-                                                        ? 'border-primary bg-primary/10 shadow-[0_0_25px_rgba(80,200,120,0.2)]'
-                                                        : 'border-white/5 bg-white/[0.02] hover:bg-white/[0.05]'
-                                                }`}
+                                                className={`cursor-pointer p-6 rounded-[2rem] border transition-all flex flex-col items-center gap-3 ${selectedCategory === tech
+                                                    ? 'border-primary bg-primary/10 shadow-[0_0_25px_rgba(80,200,120,0.2)]'
+                                                    : 'border-white/5 bg-white/[0.02] hover:bg-white/[0.05]'
+                                                    }`}
                                             >
                                                 {getTechIcon(tech, 28)}
                                                 <h3 className="font-medium tracking-[0.15em] uppercase text-[10px]">{tech}</h3>
@@ -455,11 +456,10 @@ export default function QuizRoom() {
                             {/* Timer + progress bar */}
                             <div className="flex justify-between items-end px-6">
                                 <div className="flex items-center gap-4">
-                                    <div className={`p-4 rounded-2xl border transition-all ${
-                                        timeLeft <= 3
-                                            ? 'bg-red-500/10 text-red-500 border-red-500/20 shadow-[0_0_15px_rgba(239,68,68,0.2)]'
-                                            : 'bg-primary/5 text-primary border-primary/10'
-                                    }`}>
+                                    <div className={`p-4 rounded-2xl border transition-all ${timeLeft <= 3
+                                        ? 'bg-red-500/10 text-red-500 border-red-500/20 shadow-[0_0_15px_rgba(239,68,68,0.2)]'
+                                        : 'bg-primary/5 text-primary border-primary/10'
+                                        }`}>
                                         <IoTimerOutline size={24} className={timeLeft <= 3 ? 'animate-ping' : ''} />
                                     </div>
                                     <div>
@@ -529,11 +529,10 @@ export default function QuizRoom() {
                                                     initial={{ opacity: 0, x: 10 }}
                                                     animate={{ opacity: 1, x: 0 }}
                                                     transition={{ delay: 0.2 }}
-                                                    className={`flex items-center gap-2 px-3 py-1 rounded-lg border ${
-                                                        combo >= 5
-                                                            ? 'bg-orange-500/10 border-orange-500/20'
-                                                            : 'bg-yellow-500/10 border-yellow-500/20'
-                                                    }`}
+                                                    className={`flex items-center gap-2 px-3 py-1 rounded-lg border ${combo >= 5
+                                                        ? 'bg-orange-500/10 border-orange-500/20'
+                                                        : 'bg-yellow-500/10 border-yellow-500/20'
+                                                        }`}
                                                 >
                                                     <span className={`text-[9px] uppercase ${combo >= 5 ? 'text-orange-400' : 'text-yellow-400'}`}>
                                                         Combo x{combo}
@@ -569,29 +568,26 @@ export default function QuizRoom() {
                                             exit={{ opacity: 0, scale: 1.5, y: -20 }}
                                             className="absolute inset-0 flex items-center justify-center z-30 pointer-events-none"
                                         >
-                                            <div className={`text-center px-8 py-6 rounded-3xl border backdrop-blur-xl ${
-                                                combo >= 5 ? 'bg-orange-500/20 border-orange-500/40 shadow-[0_0_40px_rgba(249,115,22,0.4)]' :
+                                            <div className={`text-center px-8 py-6 rounded-3xl border backdrop-blur-xl ${combo >= 5 ? 'bg-orange-500/20 border-orange-500/40 shadow-[0_0_40px_rgba(249,115,22,0.4)]' :
                                                 combo >= 3 ? 'bg-yellow-500/20 border-yellow-500/40 shadow-[0_0_40px_rgba(234,179,8,0.4)]' :
-                                                             'bg-primary/20 border-primary/40 shadow-[0_0_40px_rgba(80,200,120,0.4)]'
-                                            }`}>
+                                                    'bg-primary/20 border-primary/40 shadow-[0_0_40px_rgba(80,200,120,0.4)]'
+                                                }`}>
                                                 <p className="text-[9px] uppercase tracking-[0.4em] text-white/50 mb-1">
                                                     Combo Streak
                                                 </p>
-                                                <p className={`text-5xl font-black tracking-tighter ${
-                                                    combo >= 5 ? 'text-orange-400' :
+                                                <p className={`text-5xl font-black tracking-tighter ${combo >= 5 ? 'text-orange-400' :
                                                     combo >= 3 ? 'text-yellow-400' :
-                                                                 'text-primary'
-                                                }`}>
+                                                        'text-primary'
+                                                    }`}>
                                                     x{combo}
                                                 </p>
-                                                <p className={`text-[10px] uppercase tracking-widest mt-1 ${
-                                                    combo >= 5 ? 'text-orange-400' :
+                                                <p className={`text-[10px] uppercase tracking-widest mt-1 ${combo >= 5 ? 'text-orange-400' :
                                                     combo >= 3 ? 'text-yellow-400' :
-                                                                 'text-primary'
-                                                }`}>
+                                                        'text-primary'
+                                                    }`}>
                                                     {combo >= 5 ? '🔥 ON FIRE!' :
-                                                     combo >= 3 ? '⚡ HOT STREAK!' :
-                                                                  '✨ NICE COMBO!'}
+                                                        combo >= 3 ? '⚡ HOT STREAK!' :
+                                                            '✨ NICE COMBO!'}
                                                 </p>
                                             </div>
                                         </motion.div>
@@ -630,13 +626,12 @@ export default function QuizRoom() {
                                             className={`group p-6 rounded-3xl border transition-all text-left flex items-center gap-5 ${getButtonStyle(i)} ${hasAnswered ? 'cursor-default' : 'cursor-pointer'}`}
                                         >
                                             {/* Option letter badge */}
-                                            <span className={`w-10 h-10 rounded-xl flex items-center justify-center text-[11px] font-mono border transition-all flex-shrink-0 ${
-                                                i === answerResult?.correctAnswer && gamePhase === "answer_reveal"
-                                                    ? 'bg-green-500/20 border-green-500/40 text-green-400'
-                                                    : i === selectedAnswer && answerResult && !answerResult.isCorrect && gamePhase === "answer_reveal"
-                                                        ? 'bg-red-500/20 border-red-500/40 text-red-400'
-                                                        : 'bg-white/5 border-white/10 text-slate-600 group-hover:text-primary group-hover:bg-primary/10 group-hover:border-primary/20'
-                                            }`}>
+                                            <span className={`w-10 h-10 rounded-xl flex items-center justify-center text-[11px] font-mono border transition-all flex-shrink-0 ${i === answerResult?.correctAnswer && gamePhase === "answer_reveal"
+                                                ? 'bg-green-500/20 border-green-500/40 text-green-400'
+                                                : i === selectedAnswer && answerResult && !answerResult.isCorrect && gamePhase === "answer_reveal"
+                                                    ? 'bg-red-500/20 border-red-500/40 text-red-400'
+                                                    : 'bg-white/5 border-white/10 text-slate-600 group-hover:text-primary group-hover:bg-primary/10 group-hover:border-primary/20'
+                                                }`}>
                                                 {String.fromCharCode(65 + i)}
                                             </span>
 
@@ -670,6 +665,13 @@ export default function QuizRoom() {
                     )}
                 </section>
             </main>
+
+            {/* Tutorial overlay — shown once at game start */}
+            <GameTutorial
+                show={showTutorial}
+                onDone={() => setShowTutorial(false)}
+                category={selectedCategory}
+            />
 
             {/* Fire streak full-screen overlay — triggers on combo milestones */}
             <FireStreakOverlay combo={combo} show={showFireOverlay} />
