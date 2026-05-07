@@ -4,6 +4,7 @@ import { io } from "socket.io-client";
 import { motion, AnimatePresence } from "framer-motion";
 import WaitingArena from "../components/WaitingArena";
 import PixelBlast from "../components/PixelBlast";
+import FireStreakOverlay from "../components/FireStreakOverlay";
 
 import { SiPhp, SiJavascript, SiReact } from 'react-icons/si';
 import {
@@ -18,6 +19,8 @@ import {
 } from "react-icons/io5";
 
 const CATEGORIES = ["PHP", "JAVASCRIPT", "REACT"];
+
+const [showFireOverlay, setShowFireOverlay] = useState(false);
 
 export default function QuizRoom() {
     const navigate = useNavigate();
@@ -99,6 +102,7 @@ export default function QuizRoom() {
             setComboMultiplier(result.comboMultiplier);
             setSpeedBonus(result.speedBonus);
             setGamePhase("answer_reveal");
+            setCombo(result.combo);
 
             // Show combo popup if combo >= 2
             if (result.combo >= 2) {
@@ -110,6 +114,11 @@ export default function QuizRoom() {
             if (result.speedBonus > 0 && result.isCorrect) {
                 setShowSpeedPopup(true);
                 setTimeout(() => setShowSpeedPopup(false), 1500);
+            }
+
+            if (result.isCorrect && result.combo > 0 && result.combo % 5 === 0) {
+                setShowFireOverlay(true);
+                setTimeout(() => setShowFireOverlay(false), 2500);
             }
 
             setTimeout(() => setGamePhase("playing"), 1500);
@@ -503,7 +512,7 @@ export default function QuizRoom() {
                                                     animate={{ opacity: 1, x: 0 }}
                                                     transition={{ delay: 0.2 }}
                                                     className={`flex items-center gap-2 px-3 py-1 rounded-lg ${combo >= 5 ? 'bg-orange-500/10 border-orange-500/20' :
-                                                            'bg-yellow-500/10 border-yellow-500/20'
+                                                        'bg-yellow-500/10 border-yellow-500/20'
                                                         } border`}
                                                 >
                                                     <span className={`text-[9px] uppercase ${combo >= 5 ? 'text-orange-400' : 'text-yellow-400'
@@ -543,21 +552,21 @@ export default function QuizRoom() {
                                             className="absolute inset-0 flex items-center justify-center z-30 pointer-events-none"
                                         >
                                             <div className={`text-center px-8 py-6 rounded-3xl border backdrop-blur-xl ${combo >= 5 ? 'bg-orange-500/20 border-orange-500/40 shadow-[0_0_40px_rgba(249,115,22,0.4)]' :
-                                                    combo >= 3 ? 'bg-yellow-500/20 border-yellow-500/40 shadow-[0_0_40px_rgba(234,179,8,0.4)]' :
-                                                        'bg-primary/20 border-primary/40 shadow-[0_0_40px_rgba(80,200,120,0.4)]'
+                                                combo >= 3 ? 'bg-yellow-500/20 border-yellow-500/40 shadow-[0_0_40px_rgba(234,179,8,0.4)]' :
+                                                    'bg-primary/20 border-primary/40 shadow-[0_0_40px_rgba(80,200,120,0.4)]'
                                                 }`}>
                                                 <p className="text-[9px] uppercase tracking-[0.4em] text-white/50 mb-1">
                                                     Combo Streak
                                                 </p>
                                                 <p className={`text-5xl font-black tracking-tighter ${combo >= 5 ? 'text-orange-400' :
-                                                        combo >= 3 ? 'text-yellow-400' :
-                                                            'text-primary'
+                                                    combo >= 3 ? 'text-yellow-400' :
+                                                        'text-primary'
                                                     }`}>
                                                     x{combo}
                                                 </p>
                                                 <p className={`text-[10px] uppercase tracking-widest mt-1 ${combo >= 5 ? 'text-orange-400' :
-                                                        combo >= 3 ? 'text-yellow-400' :
-                                                            'text-primary'
+                                                    combo >= 3 ? 'text-yellow-400' :
+                                                        'text-primary'
                                                     }`}>
                                                     {combo >= 5 ? '🔥 ON FIRE!' :
                                                         combo >= 3 ? '⚡ HOT STREAK!' :
@@ -631,6 +640,8 @@ export default function QuizRoom() {
                     )}
                 </section>
             </main>
+            {/* Fire streak overlay — full screen on combo milestone */}
+            <FireStreakOverlay combo={combo} show={showFireOverlay} />
         </div>
     );
 }
