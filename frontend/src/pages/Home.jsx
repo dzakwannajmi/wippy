@@ -573,6 +573,11 @@ export default function Home() {
                     </div>
                 </section>
 
+                {/* =============================================
+                    FOOTER — Links and credits
+                ============================================= */}
+                <Footer />
+
             </div>
         </div>
     );
